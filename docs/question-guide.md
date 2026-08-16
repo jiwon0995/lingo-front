@@ -133,6 +133,11 @@ scoreEffect: { refreshing: 3, body: -2, bitterness: -1, sweetness: -2, aroma: -2
 `npm run check:questions` 가 모든 답변 조합을 돌려 **보조 신호가 Q4의 결과를
 뒤집지 않는지** 검사한다. 자세한 값과 여유는 [`docs/scoring-map.md`](./scoring-map.md) 에 있다.
 
+고른 스타일이 1위인 것 자체는 `recommend()` 의 `STYLE_BONUS` 가 구조적으로 보장하므로
+가중치를 잘못 잡아도 이 검사는 통과한다. 대신 스크립트가 **스타일 가산점을 뺀 유사도
+랭킹**을 같이 찍어주니 그 경고를 본다 — 스타일당 맥주가 여러 종이 되면 그쪽이 순위를
+정한다.
+
 ---
 
 ## 고쳤으면 검사한다
@@ -143,6 +148,14 @@ npm run check:questions
 
 - 질문 문구가 프로토타입 원문과 같은지 (개수 · 순서 · `title` · `id` · `icon` · `label` · `subtitle` · 결과 문구 상수)
 - 모든 답변 조합에서 Q4(style)에서 고른 스타일의 맥주가 1위인지
+- (참고용) 스타일 가산점 없이 유사도만으로도 그 맥주가 1위인지
+
+```bash
+npm test
+```
+
+- 추천 엔진 회귀 검사 — [`src/lib/recommend.test.ts`](../src/lib/recommend.test.ts).
+  `buildReason` 출력은 `docs/prototype.html` 의 원본 함수를 꺼내 직접 대조한다.
 
 문구를 **디자인과 함께 정식으로** 바꾼 경우에만 프로토타입 원문 대조가 실패하는 게
 정상이다. 이때는 `docs/prototype.html` 이 더 이상 기준이 아니므로

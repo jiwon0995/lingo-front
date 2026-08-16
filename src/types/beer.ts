@@ -1,52 +1,85 @@
-/** 맥주 스타일 (프로토타입 데이터 기준, 필요 시 확장) */
-export type BeerStyle =
-  | "lager"
-  | "pilsner"
-  | "wheat"
-  | "pale-ale"
-  | "ipa"
-  | "stout"
-  | "sour";
-
 /**
- * 맛 프로파일. 모든 축은 1~5 정수.
- * 추천 엔진이 퀴즈 답변으로 만든 target 프로파일과 거리 비교하는 데 사용.
+ * 추천 스코어링용 맛 프로필. 모든 축은 0~5 정수.
+ * 화면에는 보이지 않고 추천 계산에만 쓰인다.
  */
 export interface BeerProfile {
-  /** 쓴맛 */
-  bitter: number;
-  /** 바디감 (가벼움 → 묵직함) */
-  body: number;
   /** 단맛 */
-  sweet: number;
-  /** 신맛 */
-  sour: number;
+  sweetness: number;
+  /** 쓴맛 */
+  bitterness: number;
   /** 향 강도 */
   aroma: number;
+  /** 바디감(묵직함) */
+  body: number;
+  /** 청량감 */
+  refreshing: number;
 }
 
-/** 프로파일에서 사용하는 축 이름 */
-export type ProfileAxis = keyof BeerProfile;
+/** 프로필 축 이름 */
+export type ScoreAxis = keyof BeerProfile;
+
+/**
+ * 분위기 태그로 쓰는 값들. 프로토타입 Q2(occasion)의 선택지 id와 같다.
+ * `Beer.moodTags` 는 확장을 막지 않으려고 `string[]` 이며, 이 상수는
+ * 새 데이터를 채울 때 참고하는 어휘집이다.
+ */
+export const MOOD_TAGS = [
+  "celebration",
+  "meal",
+  "chill",
+  "gathering",
+] as const;
+
+/** 안주 태그 어휘집. `Beer.foodTags` 에 넣을 값들 */
+export const FOOD_TAGS = [
+  "fried",
+  "spicy",
+  "dessert",
+  "seafood",
+  "light",
+] as const;
 
 export interface Beer {
+  /** 프로토타입 BEER_DB의 객체 key (예: "clean-lager") */
   id: string;
-  /** 한글 표기명 */
+  /** 스타일 카테고리. 초기에는 id와 동일하고, 한 스타일에 여러 종이 생기면 갈라진다 */
+  styleId: string;
+
   name: string;
-  /** 원어 표기명 */
-  nameEn: string;
-  brewery: string;
-  /** 원산지 (예: "독일") */
-  country: string;
-  style: BeerStyle;
-  /** 도수 (%) */
-  abv: number;
+  /** 대표 이모지 */
+  emoji: string;
+  /** 카드 상단 한 줄 카피 */
+  tagline: string;
+  /** 맛 설명 문장 */
+  taste: string;
+  /** 어떤 순간에 어울리는지 */
+  perfectFor: string;
+  /** 특징 키워드 */
+  tags: string[];
+  /** 어울리는 안주 */
+  pairing: string[];
+  /** 도수. 표시용 문자열 (예: "4.8%") */
+  abv: string;
   /** 쓴맛 지수 */
   ibu: number;
+  /** 결과 카드에 표시할 매칭율 (프로토타입의 하드코딩 값) */
+  match: number;
+  /** 대표 사진 URL. 교체하기 쉽게 단일 필드로 둔다 */
+  photo: string;
+  /** 잔 위에 얹는 가니시 이모지 */
+  garnish: string;
+
+  /** 잔 그래픽 본체 색 (현재 화면 미사용, 데이터 보존) */
+  color: string;
+  /** 잔 그래픽 밝은 쪽 색 (현재 화면 미사용, 데이터 보존) */
+  colorLight: string;
+  /** 거품 색 (현재 화면 미사용, 데이터 보존) */
+  foam: string;
+
+  /** 추천 스코어링용 맛 프로필 (0~5). 화면 미노출 */
   profile: BeerProfile;
-  /** 퀴즈 선택지 태그와 매칭되는 키워드 */
-  tags: string[];
-  /** 결과 카드용 한 줄 설명 */
-  description: string;
-  /** 결과 카드 이미지 (미정 시 undefined) */
-  imageUrl?: string;
+  /** 분위기 태그. 어휘는 `MOOD_TAGS` 참고 */
+  moodTags: string[];
+  /** 안주 태그. 어휘는 `FOOD_TAGS` 참고 */
+  foodTags: string[];
 }

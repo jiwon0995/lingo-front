@@ -1,14 +1,13 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { QUESTIONS } from "@/data";
-import type { QuestionId, QuizAnswers } from "@/types";
+import type { Question, QuizAnswers } from "@/types";
 
 /**
- * 랜딩 → 4단계 퀴즈 → 결과 플로우의 진행 상태.
- * 화면 구현은 다음 단계에서 이 훅을 붙여 쓰면 됩니다.
+ * 랜딩 → 퀴즈 → 결과 플로우의 진행 상태.
+ * 질문 데이터는 Phase 2에서 만들어 인자로 넘긴다.
  */
-export function useQuizFlow(questions = QUESTIONS) {
+export function useQuizFlow(questions: Question[]) {
   const [stepIndex, setStepIndex] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswers>({});
 
@@ -16,12 +15,12 @@ export function useQuizFlow(questions = QUESTIONS) {
   const isFirst = stepIndex === 0;
   const isLast = stepIndex === questions.length - 1;
   const isComplete = useMemo(
-    () => questions.every((q) => answers[q.id] !== undefined),
+    () => questions.every((q) => answers[q.key] !== undefined),
     [questions, answers],
   );
 
-  const select = useCallback((questionId: QuestionId, choiceId: string) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: choiceId }));
+  const select = useCallback((questionKey: string, optionId: string) => {
+    setAnswers((prev) => ({ ...prev, [questionKey]: optionId }));
   }, []);
 
   const next = useCallback(() => {

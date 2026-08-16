@@ -1,82 +1,100 @@
 import type {
   Beer,
   BeerProfile,
-  ProfileAxis,
   Question,
   QuizAnswers,
   Recommendation,
+  ScoreAxis,
 } from "@/types";
 
-const AXES: ProfileAxis[] = ["bitter", "body", "sweet", "sour", "aroma"];
+const AXES: ScoreAxis[] = [
+  "sweetness",
+  "bitterness",
+  "aroma",
+  "body",
+  "refreshing",
+];
 
-/** 프로파일 축의 최소/최대값 (1~5) */
-const MIN = 1;
+/** 프로필 축의 최소/최대값 (0~5) */
+const MIN = 0;
 const MAX = 5;
 
-/** 답변이 없는 축의 기본값 (중앙값) */
-const NEUTRAL = 3;
+/** 아무 선택지도 건드리지 않은 축의 기본값 (중앙값) */
+const NEUTRAL = 2.5;
 
-/** 태그 일치 1건당 점수 가산치 */
-const TAG_BONUS = 0.04;
+/** 분위기·안주 태그 일치 1건당 점수 가산치 */
+const TAG_BONUS = 0.05;
 
-/** 답변에서 선택된 Choice들을 뽑아냅니다. */
-export function getSelectedChoices(questions: Question[], answers: QuizAnswers) {
-  return questions.flatMap((question) => {
-    const choiceId = answers[question.id];
-    if (!choiceId) return [];
-    const choice = question.choices.find((c) => c.id === choiceId);
-    return choice ? [choice] : [];
+/** 추천 계산에 반영되는 질문인지 — `affectsRecommendation` 이 없으면 true */
+function affectsRecommendation(question: Question): boolean {
+  return question.affectsRecommendation !== false;
+}
+
+/**
+ * 답변에서 선택된 Option들을 뽑아냅니다.
+ * `affectsRecommendation: false` 인 질문은 답변이 있어도 건너뜁니다.
+ */
+export function getSelectedOptions(questions: Question[], answers: QuizAnswers) {
+  return questions.filter(affectsRecommendation).flatMap((question) => {
+    const optionId = answers[question.key];
+    if (!optionId) return [];
+    const option = question.options.find((o) => o.id === optionId);
+    return option ? [option] : [];
   });
 }
 
 /**
- * 퀴즈 답변 → 목표 맛 프로파일.
- * 같은 축에 값을 준 선택지들의 평균을 쓰고, 아무도 언급하지 않은 축은 NEUTRAL.
+ * 퀴즈 답변 → 목표 맛 프로필.
+ * 중립값에서 시작해 선택지의 scoreEffect 를 더하고 0~5로 자릅니다.
  */
 export function buildTargetProfile(
   questions: Question[],
   answers: QuizAnswers,
 ): BeerProfile {
-  const choices = getSelectedChoices(questions, answers);
-  const sums: Record<string, number> = {};
-  const counts: Record<string, number> = {};
-
-  for (const choice of choices) {
-    for (const axis of AXES) {
-      const value = choice.weights[axis];
-      if (value === undefined) continue;
-      sums[axis] = (sums[axis] ?? 0) + value;
-      counts[axis] = (counts[axis] ?? 0) + 1;
-    }
-  }
+  const options = getSelectedOptions(questions, answers);
 
   return AXES.reduce((profile, axis) => {
-    const count = counts[axis] ?? 0;
-    profile[axis] = count === 0 ? NEUTRAL : sums[axis] / count;
+    const delta = options.reduce(
+      (sum, option) => sum + (option.scoreEffect?.[axis] ?? 0),
+      0,
+    );
+    profile[axis] = clamp(NEUTRAL + delta, MIN, MAX);
     return profile;
   }, {} as BeerProfile);
 }
 
-/** 답변에서 모인 태그 집합 */
-export function collectTags(
-  questions: Question[],
-  answers: QuizAnswers,
-): Set<string> {
-  return new Set(
-    getSelectedChoices(questions, answers).flatMap(
-      (choice) => choice.tags ?? [],
-    ),
+/** 답변에서 모인 분위기·안주 태그 */
+export function collectTags(questions: Question[], answers: QuizAnswers) {
+  const options = getSelectedOptions(questions, answers);
+  return {
+    moodTags: new Set(options.flatMap((option) => option.moodTags ?? [])),
+    foodTags: new Set(options.flatMap((option) => option.foodTags ?? [])),
+  };
+}
+
+type CollectedTags = ReturnType<typeof collectTags>;
+
+const NO_TAGS: CollectedTags = {
+  moodTags: new Set(),
+  foodTags: new Set(),
+};
+
+/** 맥주 태그가 답변 태그와 몇 건이나 겹치는지 */
+function countMatches(beer: Beer, collected: CollectedTags): number {
+  return (
+    beer.moodTags.filter((tag) => collected.moodTags.has(tag)).length +
+    beer.foodTags.filter((tag) => collected.foodTags.has(tag)).length
   );
 }
 
 /**
- * 목표 프로파일과 맥주의 거리 기반 점수 (0~1).
+ * 목표 프로필과 맥주의 거리 기반 점수 (0~1).
  * 정규화된 맨해튼 거리를 1에서 뺀 값 + 태그 보너스.
  */
 export function scoreBeer(
   target: BeerProfile,
   beer: Beer,
-  tags: Set<string> = new Set(),
+  collected: CollectedTags = NO_TAGS,
 ): number {
   const span = MAX - MIN;
   const totalDistance = AXES.reduce(
@@ -85,25 +103,20 @@ export function scoreBeer(
   );
   const base = 1 - totalDistance / AXES.length;
 
-  const matchedTags = beer.tags.filter((tag) => tags.has(tag)).length;
-  return clamp01(base + matchedTags * TAG_BONUS);
+  return clamp(base + countMatches(beer, collected) * TAG_BONUS, 0, 1);
 }
 
 /** 결과 카드에 보여줄 추천 사유 */
-export function buildReasons(
-  target: BeerProfile,
-  beer: Beer,
-  tags: Set<string> = new Set(),
-): string[] {
-  const labels: Record<ProfileAxis, string> = {
-    bitter: "쓴맛",
-    body: "무게감",
-    sweet: "단맛",
-    sour: "신맛",
+export function buildReasons(target: BeerProfile, beer: Beer): string[] {
+  const labels: Record<ScoreAxis, string> = {
+    sweetness: "단맛",
+    bitterness: "쓴맛",
     aroma: "향",
+    body: "무게감",
+    refreshing: "청량감",
   };
 
-  const closest = [...AXES]
+  return [...AXES]
     .sort(
       (a, b) =>
         Math.abs(target[a] - beer.profile[a]) -
@@ -111,9 +124,6 @@ export function buildReasons(
     )
     .slice(0, 2)
     .map((axis) => `${labels[axis]}이 원하시는 정도와 잘 맞아요`);
-
-  const matched = beer.tags.filter((tag) => tags.has(tag)).slice(0, 2);
-  return [...closest, ...matched.map((tag) => `#${tag}`)];
 }
 
 /**
@@ -127,22 +137,22 @@ export function recommend(
   limit = 3,
 ): Recommendation[] {
   const target = buildTargetProfile(questions, answers);
-  const tags = collectTags(questions, answers);
+  const collected = collectTags(questions, answers);
 
   return beers
     .map((beer) => {
-      const score = scoreBeer(target, beer, tags);
+      const score = scoreBeer(target, beer, collected);
       return {
         beer,
         score,
         matchPercent: Math.round(score * 100),
-        reasons: buildReasons(target, beer, tags),
+        reasons: buildReasons(target, beer),
       };
     })
     .sort((a, b) => b.score - a.score || a.beer.id.localeCompare(b.beer.id))
     .slice(0, limit);
 }
 
-function clamp01(value: number): number {
-  return Math.min(1, Math.max(0, value));
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }

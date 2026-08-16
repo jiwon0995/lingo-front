@@ -3,7 +3,7 @@ export {
   buildReasons,
   buildTargetProfile,
   collectTags,
-  getSelectedChoices,
+  getSelectedOptions,
   recommend,
   scoreBeer,
 } from "./recommend";

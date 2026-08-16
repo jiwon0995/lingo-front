@@ -1,9 +1,14 @@
 export { cn } from "./cn";
 export {
-  buildReasons,
-  buildTargetProfile,
-  collectTags,
+  buildReason,
+  buildUserVector,
   getSelectedOptions,
+  pickAnother,
   recommend,
   scoreBeer,
+} from "./recommend";
+export type {
+  PickAnotherOptions,
+  Random,
+  RecommendOptions,
 } from "./recommend";

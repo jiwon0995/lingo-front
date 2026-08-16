@@ -22,8 +22,15 @@ const MAX = 5;
 /** 아무 선택지도 건드리지 않은 축의 기본값 (중앙값) */
 const NEUTRAL = 2.5;
 
-/** 분위기·안주 태그 일치 1건당 점수 가산치 */
-const TAG_BONUS = 0.05;
+/**
+ * 분위기·안주 태그 일치 1건당 점수 가산치.
+ *
+ * 태그는 **동점 후보를 가르는 용도**라서 프로필 거리를 뒤집으면 안 된다.
+ * 프로필 거리 1칸 차이가 점수로 `1/25 = 0.04` 이므로, 태그 보너스가 이보다
+ * 크면 스타일 질문(Q4)의 결과를 동행·방문 이유가 뒤집어 버린다.
+ * `docs/scoring-map.md` 의 "보조 신호가 Q4를 못 뒤집는 이유" 참고.
+ */
+const TAG_BONUS = 0.01;
 
 /** 추천 계산에 반영되는 질문인지 — `affectsRecommendation` 이 없으면 true */
 function affectsRecommendation(question: Question): boolean {

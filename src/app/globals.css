@@ -1,29 +1,69 @@
 @import "tailwindcss";
 
-/* ---------------------------------------------------------------
- * 디자인 토큰 (프로토타입 CSS 커스텀 프로퍼티 이식)
- * 실제 프로토타입 파일을 받으면 아래 값만 교체하면 됩니다.
- * ------------------------------------------------------------- */
+/* ===============================================================
+ * 디자인 토큰
+ * docs/prototype.html 의 :root 값을 그대로 옮긴 것이다.
+ * 값을 임의로 바꾸지 말 것 — 프로토타입 재현이 기준이다.
+ * =============================================================== */
 :root {
-  --ink: #191919; /* 본문/제목 기본 텍스트 */
-  --ink-2: #3d3d3d; /* 보조 텍스트 */
-  --red: #d92b2b; /* 브랜드 레드 (CTA, 강조) */
-  --red-dark: #a81f1f; /* hover/active 상태 */
-  --muted: #8b8b8b; /* 캡션, 비활성 */
-  --line: #e9e6e1; /* 보더, 구분선 */
-  --surface: #ffffff; /* 카드/시트 배경 */
-  --bg: #faf8f5; /* 페이지 배경 (프로토타입에 없으면 제거해도 무방) */
+  --white: #ffffff;
+  --ink: #12213d;
+  --ink-2: #0a1830;
+  --red: #ffca58;
+  --red-dark: #c0141a;
+  --muted: #8b92a0;
+  --line: #e6e8ec;
+  --surface: #f5f6f8;
 }
 
 /* ---------------------------------------------------------------
- * 키프레임 (프로토타입 애니메이션 이식)
- * @theme 밖 최상위에 두어 tree-shaking 없이 항상 사용 가능하게 합니다.
- * → Tailwind 유틸(animate-fade-slide-in)과 인라인 animation 둘 다 동작.
+ * Tailwind v4 테마 매핑
+ * inline → 유틸리티가 위 :root 변수를 그대로 참조한다.
+ * (bg-ink, text-red-dark, border-line ... 로 사용)
  * ------------------------------------------------------------- */
+@theme inline {
+  --color-white: var(--white);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-red: var(--red);
+  --color-red-dark: var(--red-dark);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-surface: var(--surface);
+
+  --font-sans: "Pretendard", sans-serif;
+
+  /* 모바일 셸 최대 너비 (max-w-shell) — 프로토타입 #app 과 동일 */
+  --container-shell: 390px;
+}
+
+/* ---------------------------------------------------------------
+ * 애니메이션 유틸리티
+ * 값은 프로토타입에서 해당 클래스가 쓰던 animation 단축 속성 그대로다.
+ * ------------------------------------------------------------- */
+@theme {
+  --animate-fade-slide-in: fadeSlideIn 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-slide-out: fadeSlideOut 200ms cubic-bezier(0.4, 0, 1, 1) both;
+  --animate-pop-select: popSelect 340ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-slide-up: slideUp 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-gentle-sway: gentleSway 3.6s ease-in-out infinite;
+  --animate-ring-pulse: ringPulse 2.4s ease-out infinite;
+  --animate-float-bob: floatBob 4.2s ease-in-out infinite;
+  --animate-card-swap: cardSwap 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-dice-spin: diceSpin 480ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ===============================================================
+ * @keyframes — 프로토타입 원본 그대로
+ * @theme 밖 최상위에 두어 Tailwind 유틸과 아래 컴포넌트 클래스가
+ * 모두 참조할 수 있게 한다.
+ * =============================================================== */
+
+/* .fade-enter — 화면 진입 */
 @keyframes fadeSlideIn {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
@@ -31,121 +71,319 @@
   }
 }
 
+/* .fade-out — 화면 이탈 */
+@keyframes fadeSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* .opt-card.pulse-pop — 선택지 탭 피드백 */
 @keyframes popSelect {
   0% {
     transform: scale(1);
   }
-  45% {
-    transform: scale(1.06);
+  35% {
+    transform: scale(0.94);
+  }
+  65% {
+    transform: scale(1.02);
   }
   100% {
-    transform: scale(1);
+    transform: scale(0.98);
   }
 }
 
-@keyframes ringPulse {
-  0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--red) 45%, transparent);
-  }
-  70% {
-    box-shadow: 0 0 0 12px color-mix(in srgb, var(--red) 0%, transparent);
-  }
-  100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--red) 0%, transparent);
-  }
-}
-
-@keyframes confettiFall {
-  0% {
-    opacity: 1;
-    transform: translate3d(0, -10%, 0) rotate(0deg);
-  }
-  100% {
+/* .result-card — 결과 카드 등장 */
+@keyframes slideUp {
+  from {
     opacity: 0;
-    transform: translate3d(0, 110vh, 0) rotate(720deg);
+    transform: translateY(48px) scale(0.97);
   }
-}
-
-@keyframes cardSwap {
-  0% {
-    opacity: 0;
-    transform: translateY(16px) scale(0.96);
-  }
-  60% {
-    opacity: 1;
-    transform: translateY(-4px) scale(1.01);
-  }
-  100% {
+  to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 
-@keyframes diceSpin {
-  0% {
-    transform: rotate(0deg) scale(1);
+/* .landing-emoji — 랜딩 맥주 이모지 */
+@keyframes gentleSway {
+  0%,
+  100% {
+    transform: rotate(-4deg) translateY(0);
   }
   50% {
-    transform: rotate(360deg) scale(1.15);
-  }
-  100% {
-    transform: rotate(720deg) scale(1);
+    transform: rotate(4deg) translateY(-6px);
   }
 }
 
+/* .foam-ring — 거품 링 확산 */
+@keyframes ringPulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.5;
+  }
+  70% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* .confetti-piece — duration 은 조각마다 JS 로 지정된다 */
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(600deg);
+    opacity: 0;
+  }
+}
+
+/* .glass-svg-wrap — 맥주잔 일러스트 부유 */
 @keyframes floatBob {
   0%,
   100% {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-8px);
+    transform: translateY(-6px);
   }
 }
 
-/* ---------------------------------------------------------------
- * Tailwind v4 테마 매핑
- * inline: 토큰 값을 :root 변수로 참조하도록 함
- * ------------------------------------------------------------- */
-@theme inline {
-  --color-ink: var(--ink);
-  --color-ink-2: var(--ink-2);
-  --color-red-brand: var(--red);
-  --color-red-brand-dark: var(--red-dark);
-  --color-muted: var(--muted);
-  --color-line: var(--line);
-  --color-surface: var(--surface);
-  --color-bg: var(--bg);
-
-  --font-sans: var(--font-pretendard);
-
-  /* 모바일 셸 최대 너비 (max-w-shell) */
-  --container-shell: 390px;
+/* .card-swap / .image-swap — 다른 추천 보기 */
+@keyframes cardSwap {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.96) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-@theme {
-  --animate-fade-slide-in: fadeSlideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-  --animate-pop-select: popSelect 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
-  --animate-ring-pulse: ringPulse 1.6s ease-out infinite;
-  --animate-confetti-fall: confettiFall 2.4s linear forwards;
-  --animate-card-swap: cardSwap 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-  --animate-dice-spin: diceSpin 0.9s cubic-bezier(0.45, 0, 0.55, 1);
-  --animate-float-bob: floatBob 3s ease-in-out infinite;
+/* .dice-btn.dice-spin — 주사위 리롤 */
+@keyframes diceSpin {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  40% {
+    transform: rotate(200deg) scale(0.85);
+  }
+  70% {
+    transform: rotate(330deg) scale(1.08);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
 }
 
+/* ===============================================================
+ * 전역 base — 프로토타입 원본 그대로
+ * =============================================================== */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
 body {
-  background: var(--bg);
-  color: var(--ink);
-  font-family: var(--font-sans), system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
+  background: var(--white);
+  font-family: "Pretendard", sans-serif;
+  overscroll-behavior: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+h1,
+h2,
+h3,
+.display {
+  font-family: "Pretendard", sans-serif;
+}
+
+/* ===============================================================
+ * 인터랙션 레이어 — transition 값은 프로토타입 원본 그대로다.
+ * 레이아웃/타이포 스타일은 화면 구현 단계에서 각 컴포넌트가 맡는다.
+ * =============================================================== */
+
+/* 화면 전환 */
+.fade-enter {
+  animation: fadeSlideIn 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.fade-out {
+  animation: fadeSlideOut 200ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+/* 선택지 카드 */
+.opt-card {
+  transition:
+    transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 200ms ease,
+    border-color 200ms ease,
+    background 200ms ease;
+  -webkit-user-select: none;
+  user-select: none;
+  border-width: 2px;
+  border-style: solid;
+  border-color: var(--line);
+}
+.opt-card:active {
+  transform: scale(0.97);
+}
+.opt-card.selected {
+  transform: scale(0.98);
+  border-color: var(--red);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 202, 88, 0.045),
+    rgba(255, 202, 88, 0.01)
+  );
+  box-shadow: 0 6px 16px -10px rgba(255, 202, 88, 0.45);
+}
+.opt-card.pulse-pop {
+  animation: popSelect 340ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.icon-badge {
+  transition: transform 200ms ease;
+}
+.opt-card:active .icon-badge {
+  transform: scale(0.92);
+}
+
+/* 스텝퍼 */
+.step-circle {
+  transition:
+    background 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease;
+}
+.step-line {
+  transition: background 220ms ease;
+}
+
+/* 버튼 */
+.btn-primary {
+  background: var(--ink);
+  transition:
+    transform 140ms ease,
+    background 140ms ease;
+}
+.btn-primary:active {
+  transform: scale(0.98);
+  background: var(--ink-2);
+}
+.btn-primary-alt,
+.btn-secondary {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  transition:
+    transform 140ms ease,
+    background 140ms ease;
+}
+.btn-primary-alt:active,
+.btn-secondary:active {
+  transform: scale(0.98);
+  background: #ecedf1;
+}
+
+.back-btn {
+  color: var(--ink);
+  transition:
+    transform 140ms ease,
+    background 140ms ease;
+}
+.back-btn:active {
+  transform: scale(0.9);
+  background: var(--surface);
+}
+
+/* 결과 화면 애니메이션 */
+.result-card {
+  animation: slideUp 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.landing-emoji {
+  animation: gentleSway 3.6s ease-in-out infinite;
+}
+.foam-ring {
+  animation: ringPulse 2.4s ease-out infinite;
+}
+.glass-svg-wrap {
+  animation: floatBob 4.2s ease-in-out infinite;
+}
+.card-swap,
+.image-swap {
+  animation: cardSwap 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* 컨페티 */
+.confetti-piece {
+  position: fixed;
+  top: -20px;
+  z-index: 50;
+  border-radius: 2px;
+  pointer-events: none;
+  animation-name: confettiFall;
+  animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation-fill-mode: forwards;
+}
+
+/* 주사위 리롤 FAB */
+.dice-btn {
+  background: var(--red);
+  border: 2px solid var(--red);
+  box-shadow:
+    0 12px 28px -8px rgba(18, 33, 61, 0.4),
+    0 4px 10px -2px rgba(18, 33, 61, 0.25),
+    0 0 0 4px var(--white);
+  transition:
+    transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 160ms ease;
+}
+.dice-btn:active {
+  transform: scale(0.88);
+}
+.dice-btn.dice-spin {
+  animation: diceSpin 480ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 별점 바텀시트 */
+.rating-overlay {
+  transition: opacity 220ms ease;
+}
+.rating-sheet {
+  transform: translateY(100%);
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.rating-overlay.open .rating-sheet {
+  transform: translateY(0);
+}
+.rating-close {
+  transition: background 140ms ease;
+}
+.rating-close:active {
+  background: var(--surface);
+}
+.rating-star {
+  color: var(--line);
+  transition:
+    transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 160ms ease;
+}
+.rating-star:active {
+  transform: scale(0.85);
+}
+.rating-star.filled {
+  color: var(--red);
+}
+.rating-thanks-icon {
+  animation: popSelect 340ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }

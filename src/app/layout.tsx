@@ -1,16 +1,22 @@
 import type { Metadata, Viewport } from "next";
+import { APP_TITLE } from "@/config";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "링고 — 오늘의 맥주 추천",
-  description: "4개의 질문으로 오늘 나에게 잘 맞는 맥주를 찾아보세요.",
+  title: APP_TITLE,
+  description: "간단한 질문 4개에 답하면 딱 맞는 맥주를 추천해드려요.",
 };
 
+/**
+ * 프로토타입의 viewport meta 와 동일하게 맞춘다.
+ * 확대 금지(maximum-scale=1, user-scalable=no)는 접근성 관점에선 권장되지
+ * 않지만, 프로토타입 재현이 우선이라 그대로 둔다.
+ */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#d92b2b",
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -19,21 +25,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className="h-full">
+    <html lang="ko">
       <head>
-        {/* Pretendard: 프로토타입과 동일한 CDN <link> 방식 */}
+        {/* Pretendard — 프로토타입과 동일한 CDN <link> 방식 */}
         <link
           rel="stylesheet"
+          as="style"
+          crossOrigin=""
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/static/pretendard.css"
         />
-        <style>{`:root { --font-pretendard: "Pretendard", "Pretendard Variable"; }`}</style>
       </head>
-      <body className="min-h-dvh">
-        {/* 모바일 우선 셸: 최대 390px 중앙 정렬 */}
-        <div className="mx-auto flex min-h-dvh w-full max-w-shell flex-col bg-surface">
-          {children}
-        </div>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

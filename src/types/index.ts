@@ -6,4 +6,4 @@ export type {
   QuizAnswers,
   ScoreEffect,
 } from "./question";
-export type { Recommendation } from "./result";
+export type { Recommendation, UserVector } from "./result";

@@ -210,10 +210,13 @@ npx tsc --noEmit
    기존 링크가 깨진다. 메뉴판 이름이 바뀌어도 `id` 는 유지한다.
 
 2. **`match` 는 지금 하드코딩이다.** 프로토타입이 맥주마다 고정 숫자
-   (90~96)를 들고 있어서 그대로 옮겼다. 실제로 계산된 매칭율을 쓰려면
-   [`src/lib/recommend.ts`](../src/lib/recommend.ts) 의 `Recommendation.matchPercent`
-   를 쓰고, `Beer.match` 는 표시용 기본값으로만 남긴다. **두 값이 화면에
-   섞여 나오지 않게 어느 쪽을 쓸지 먼저 정한다.**
+   (90~96)를 들고 있어서 그대로 옮겼고, 결과 카드의 매칭율은 이 값이다
+   (`Recommendation.matchPercent` = `beer.match`). 추천 엔진이 계산하는
+   `Recommendation.score` 는 **순위 결정 전용**이라 화면에 나가지 않는다.
+   계산값을 매칭율로 쓰고 싶어지면
+   [`src/lib/recommend.ts`](../src/lib/recommend.ts) 의 `matchPercent` 를
+   `score` 로 바꾸면 되지만, **두 값이 화면에 섞여 나오지 않게 어느 쪽을 쓸지
+   먼저 정한다.**
 
 3. **`abv` 는 문자열이라 숫자 비교가 안 된다.** "도수 낮은 순 정렬" 같은
    기능이 필요해지면 `abvValue: number` 를 따로 추가하는 편이 낫다.

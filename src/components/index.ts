@@ -1,0 +1,1 @@
+export { BeerFinderApp } from "./BeerFinderApp";

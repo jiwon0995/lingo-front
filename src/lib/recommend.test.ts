@@ -1,6 +1,15 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { BEERS, QUESTIONS, getBeerByStyle, getQuestionByKey } from "@/data";
+import {
+  BEERS,
+  QUESTIONS,
+  getBeerById,
+  getBeerByStyle,
+  getBeersByStyle,
+  getQuestionByKey,
+  getScoringQuestions,
+  getStyleIds,
+} from "@/data";
 import type { Beer, QuizAnswers } from "@/types";
 import {
   buildReason,
@@ -466,5 +475,145 @@ describe("질문 데이터 계약", () => {
     ).map((q) => q.key);
 
     expect(excluded).toEqual(["source"]);
+  });
+});
+
+/* ------------------------------------------------------------------ *
+ * 망가진 · 예상 밖 입력
+ *
+ * 답변은 URL · 저장된 세션 등 바깥에서 올 수도 있다. 알 수 없는 값이 들어와도
+ * 던지지 않고 "그 답변만 없는 것처럼" 굴러가야 한다.
+ * ------------------------------------------------------------------ */
+
+describe("알 수 없는 답변 값", () => {
+  it("없는 선택지 id 는 취향 벡터에서 조용히 무시된다", () => {
+    const bogus = buildUserVector({ company: "없는-선택지" });
+    const empty = buildUserVector({});
+
+    expect(bogus).toEqual(empty);
+    // 고른 게 없는 것과 같으므로 랜덤 경로로 간다
+    expect(bogus.hasSignal).toBe(false);
+  });
+
+  it("없는 선택지 id 가 섞여도 나머지 답변은 그대로 반영된다", () => {
+    const vector = buildUserVector({
+      company: "없는-선택지",
+      style: "dark-malty",
+    });
+
+    expect(vector.hasSignal).toBe(true);
+    // dark-malty 의 scoreEffect(body +3) 만 적용된다
+    expect(vector.body).toBe(5); // 2.5 + 3 → 0~5 로 잘림
+  });
+
+  it("없는 스타일 id 하나뿐이면 신호가 없는 것과 같아 랜덤 경로로 간다", () => {
+    const ranked = recommend({ style: "없는-스타일" });
+
+    expect(ranked).toHaveLength(BEERS.length);
+    // 고른 게 없는 것과 같으므로 정렬하지 않고 셔플된 순서 그대로 나온다
+    expect(buildUserVector({ style: "없는-스타일" }).hasSignal).toBe(false);
+  });
+
+  it("없는 스타일 + 유효한 답변이면 유사도만으로 정렬된다", () => {
+    const ranked = recommend({ company: "alone", style: "없는-스타일" });
+
+    expect(ranked).toHaveLength(BEERS.length);
+    // 스타일 가산점을 받을 맥주가 없으므로 순수 유사도 내림차순
+    const scores = ranked.map((r) => r.score);
+    expect(scores).toEqual([...scores].sort((a, b) => b - a));
+  });
+
+  it("없는 스타일 id 면 맛 수식어 자리가 비고 문장은 만들어진다", () => {
+    expect(buildReason({ company: "alone" }, "없는-스타일")).toBe(
+      "혼자서  맥주를 좋아하는 당신을 위해 골랐어요.",
+    );
+    expect(buildReason({}, "없는-스타일")).toBe(
+      "질문 없이 골라드리는 오늘의 심플 추천이에요!  맥주, 부담 없이 즐겨보세요.",
+    );
+  });
+
+  it("styleId 를 생략하면 answers.style 을 쓴다", () => {
+    expect(buildReason({ company: "alone", style: "clean-lager" })).toBe(
+      buildReason({ company: "alone" }, "clean-lager"),
+    );
+  });
+
+  it("맥주 목록이 비어 있으면 빈 추천 목록", () => {
+    expect(recommend({ style: "clean-lager" }, [])).toEqual([]);
+  });
+});
+
+/* ------------------------------------------------------------------ *
+ * 스타일 가산점 스위치
+ * ------------------------------------------------------------------ */
+
+describe("styleBonus 옵션", () => {
+  it("가산점이 0이면 스타일 경계를 넘을 수 있다 (유사도만 본다)", () => {
+    const answers: QuizAnswers = { company: "partner", style: "dark-malty" };
+
+    const withBonus = recommend(answers, BEERS, { random: seeded(7) });
+    const withoutBonus = recommend(answers, BEERS, {
+      random: seeded(7),
+      styleBonus: 0,
+    });
+
+    expect(withBonus[0].beer.styleId).toBe("dark-malty");
+    // 가산점을 빼면 순위는 순수 유사도 내림차순이 된다
+    const scores = withoutBonus.map((r) => r.score);
+    expect(scores).toEqual([...scores].sort((a, b) => b - a));
+  });
+
+  it("가산점이 살아 있으면 유사도 1위가 아니어도 고른 스타일이 1순위다", () => {
+    for (const style of STYLE_IDS) {
+      const ranked = recommend({ company: "partner", occasion: "meal", style });
+      expect(ranked[0].beer.styleId).toBe(style);
+    }
+  });
+});
+
+/* ------------------------------------------------------------------ *
+ * 데이터 조회 헬퍼
+ * ------------------------------------------------------------------ */
+
+describe("맥주 조회 헬퍼", () => {
+  it("getBeerById — 있으면 그 맥주, 없으면 undefined", () => {
+    expect(getBeerById("clean-lager")?.name).toBe("골든 라거");
+    expect(getBeerById("없는-맥주")).toBeUndefined();
+  });
+
+  it("getBeersByStyle — 스타일에 속한 맥주 전부", () => {
+    for (const style of STYLE_IDS) {
+      const beers = getBeersByStyle(style);
+      expect(beers.length).toBeGreaterThan(0);
+      for (const beer of beers) expect(beer.styleId).toBe(style);
+    }
+    expect(getBeersByStyle("없는-스타일")).toEqual([]);
+  });
+
+  it("getBeerByStyle — 스타일의 대표 맥주 하나, 없으면 undefined", () => {
+    // 지금은 스타일당 1종이라 그 맥주가 곧 대표다.
+    // (여러 종일 때 match 가 높은 쪽을 고르는 분기는 `BEERS` 를 주입할 수 없어
+    //  여기서 직접 못 찍는다 — 스타일당 2종이 생기면 그때 같이 손본다)
+    for (const style of STYLE_IDS) {
+      expect(getBeerByStyle(style)?.styleId).toBe(style);
+    }
+    expect(getBeerByStyle("없는-스타일")).toBeUndefined();
+  });
+
+  it("getStyleIds — 중복 없이 등장 순서를 지킨다", () => {
+    expect(getStyleIds()).toEqual(STYLE_IDS);
+  });
+
+  it("getQuestionByKey — 없으면 undefined", () => {
+    expect(getQuestionByKey("style")?.key).toBe("style");
+    expect(getQuestionByKey("없는-질문")).toBeUndefined();
+  });
+
+  it("getScoringQuestions — source 를 뺀 나머지", () => {
+    expect(getScoringQuestions().map((q) => q.key)).toEqual([
+      "company",
+      "occasion",
+      "style",
+    ]);
   });
 });

@@ -1,0 +1,159 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`질문 문구 > 질문 개수와 선택지 개수가 그대로다 1`] = `
+[
+  "company: 5개",
+  "occasion: 4개",
+  "source: 4개",
+  "style: 7개",
+]
+`;
+
+exports[`질문 문구 > 질문 제목 · 선택지 라벨 · 이모지 · 서브타이틀이 그대로다 1`] = `
+[
+  {
+    "key": "company",
+    "options": [
+      {
+        "icon": "👤",
+        "id": "alone",
+        "label": "혼자",
+        "subtitle": null,
+      },
+      {
+        "icon": "❤️",
+        "id": "partner",
+        "label": "연인",
+        "subtitle": null,
+      },
+      {
+        "icon": "👯",
+        "id": "friends",
+        "label": "친구",
+        "subtitle": null,
+      },
+      {
+        "icon": "👨‍👩‍👧",
+        "id": "family",
+        "label": "가족",
+        "subtitle": null,
+      },
+      {
+        "icon": "💼",
+        "id": "colleagues",
+        "label": "동료",
+        "subtitle": null,
+      },
+    ],
+    "title": "오늘은 누구와 함께 하시나요?",
+  },
+  {
+    "key": "occasion",
+    "options": [
+      {
+        "icon": "🎉",
+        "id": "celebration",
+        "label": "기념일 · 축하",
+        "subtitle": null,
+      },
+      {
+        "icon": "🍽️",
+        "id": "meal",
+        "label": "맛있는 음식과 함께",
+        "subtitle": null,
+      },
+      {
+        "icon": "😌",
+        "id": "chill",
+        "label": "가볍게 힐링",
+        "subtitle": null,
+      },
+      {
+        "icon": "👋",
+        "id": "gathering",
+        "label": "오랜만의 모임",
+        "subtitle": null,
+      },
+    ],
+    "title": "오늘 방문한 이유가 궁금해요",
+  },
+  {
+    "key": "source",
+    "options": [
+      {
+        "icon": "📱",
+        "id": "sns",
+        "label": "SNS(인스타·블로그)",
+        "subtitle": null,
+      },
+      {
+        "icon": "👥",
+        "id": "referral",
+        "label": "지인 추천",
+        "subtitle": null,
+      },
+      {
+        "icon": "🚶",
+        "id": "walkby",
+        "label": "지나가다 발견",
+        "subtitle": null,
+      },
+      {
+        "icon": "🔁",
+        "id": "revisit",
+        "label": "재방문(단골)",
+        "subtitle": null,
+      },
+    ],
+    "title": "저희 매장은 어떻게 알고 오셨나요?",
+  },
+  {
+    "key": "style",
+    "options": [
+      {
+        "icon": "🧊",
+        "id": "clean-lager",
+        "label": "깔끔 · 청량",
+        "subtitle": "라거 · 라들러 · 첫잔 추천",
+      },
+      {
+        "icon": "🍊",
+        "id": "hop-forward",
+        "label": "쌉쌀 · 시트러스",
+        "subtitle": "페일에일 · IPA",
+      },
+      {
+        "icon": "🍌",
+        "id": "wheat-yeast",
+        "label": "향긋 · 부드러운",
+        "subtitle": "밀맥주 · 벨지안",
+      },
+      {
+        "icon": "🍋",
+        "id": "sour-funky",
+        "label": "새콤달콤 · 상큼",
+        "subtitle": "고제 · 람빅 · 사워",
+      },
+      {
+        "icon": "☕",
+        "id": "dark-malty",
+        "label": "고소 · 진한 흑맥주",
+        "subtitle": "스타우트 · 포터",
+      },
+      {
+        "icon": "🥃",
+        "id": "barrel-strong",
+        "label": "묵직한 한 잔",
+        "subtitle": "배럴에이지드 · 스트롱에일",
+      },
+      {
+        "icon": "🍰",
+        "id": "dessert-specialty",
+        "label": "디저트 · 스페셜티",
+        "subtitle": "이색 부재료 맥주",
+      },
+    ],
+    "title": "어떤 스타일의 맥주가 끌리시나요?",
+  },
+]
+`;

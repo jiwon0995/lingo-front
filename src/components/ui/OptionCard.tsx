@@ -33,6 +33,8 @@ export function OptionCard({
     <button
       type="button"
       onClick={() => onSelect(option.id)}
+      // 선택 상태를 시각적으로는 ✓ 로만 보여주므로 보조기기에는 이걸로 알린다
+      aria-pressed={selected}
       style={{ animationDelay: `${index * STAGGER_MS}ms` }}
       className={cn(
         "opt-card flex w-full items-center gap-4 rounded-2xl border-2 bg-white px-5 py-4 text-left",
@@ -40,7 +42,11 @@ export function OptionCard({
         popping && "pulse-pop",
       )}
     >
-      <span className="icon-badge bg-surface flex size-12 shrink-0 items-center justify-center rounded-xl text-2xl">
+      {/* 라벨을 그림으로 되풀이하는 장식이라 접근성 트리에서 뺀다 */}
+      <span
+        aria-hidden="true"
+        className="icon-badge bg-surface flex size-12 shrink-0 items-center justify-center rounded-xl text-2xl"
+      >
         {option.icon}
       </span>
       <span className="flex min-w-0 flex-col">
@@ -53,7 +59,9 @@ export function OptionCard({
           </span>
         )}
       </span>
+      {/* 선택 표시는 위 `aria-pressed` 가 전달한다 — ✓ 는 장식 */}
       <span
+        aria-hidden="true"
         className={cn(
           "opt-check text-red ml-auto shrink-0 text-lg",
           !selected && "opacity-0",

@@ -17,7 +17,10 @@ export function LandingScreen() {
         <div />
 
         <div className="flex flex-col items-center text-center">
-          <div className="landing-emoji mb-6 text-7xl">🍺</div>
+          {/* 장식용 이모지 — 읽어줄 내용이 없어 접근성 트리에서 뺀다 */}
+          <div aria-hidden="true" className="landing-emoji mb-6 text-7xl">
+            🍺
+          </div>
           <h1 className="display text-ink mb-4 text-[28px] leading-[1.25] font-medium">
             {APP_TITLE}
           </h1>

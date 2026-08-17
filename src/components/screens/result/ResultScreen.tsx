@@ -65,7 +65,11 @@ export function ResultScreen() {
               <div
                 className={`${BADGE_GLASS} absolute top-3 left-3 flex items-center gap-1.5 rounded-full py-1.5 pr-3 pl-2.5`}
               >
-                <span className="text-[11px] leading-none tracking-tight">
+                {/* 별은 옆의 "매칭 n%" 를 그림으로 되풀이하는 장식이다 */}
+                <span
+                  aria-hidden="true"
+                  className="text-[11px] leading-none tracking-tight"
+                >
                   {Array.from({ length: STAR_COUNT }, (_, index) => (
                     <span
                       key={index}
@@ -81,7 +85,9 @@ export function ResultScreen() {
                   매칭 {matchPercent}%
                 </span>
               </div>
+              {/* 가니시 이모지 — 맥주 이름 옆의 장식이라 읽어줄 내용이 없다 */}
               <div
+                aria-hidden="true"
                 className={`${BADGE_GLASS} absolute top-3 right-3 flex size-9 items-center justify-center rounded-full text-lg`}
               >
                 {beer.garnish}
@@ -132,7 +138,9 @@ export function ResultScreen() {
             <div
               className={`${SURFACE_BOX} mb-6 flex w-full items-start gap-2.5 rounded-xl px-4 py-3.5 text-left`}
             >
-              <span className="mt-0.5 text-base leading-none">💡</span>
+              <span aria-hidden="true" className="mt-0.5 text-base leading-none">
+                💡
+              </span>
               <p className="text-ink/80 text-[13.5px] leading-relaxed font-medium">
                 {reason}
               </p>
@@ -155,7 +163,9 @@ export function ResultScreen() {
                       key={food}
                       className="text-ink/80 flex items-center gap-2 text-[15px] font-medium"
                     >
-                      <span className="text-red">•</span>
+                      <span aria-hidden="true" className="text-red">
+                        •
+                      </span>
                       <span>{food}</span>
                     </div>
                   ))}

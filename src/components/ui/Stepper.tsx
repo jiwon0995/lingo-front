@@ -29,7 +29,9 @@ export function Stepper({ total, current }: StepperProps) {
   const step = Math.max(0, Math.min(current, total));
 
   return (
-    <div className="flex flex-1 items-center">
+    // 진행 상황은 옆의 "STEP n/N" 텍스트가 이미 말해준다 —
+    // 동그라미까지 읽으면 "1 2 3 4" 가 중복되므로 접근성 트리에서 뺀다
+    <div aria-hidden="true" className="flex flex-1 items-center">
       {Array.from({ length: total }, (_, index) => index + 1).map((number) => {
         const state =
           number < step ? "done" : number === step ? "current" : "upcoming";

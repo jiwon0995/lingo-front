@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // 생성물 — 커버리지 리포트와 Playwright 결과물은 검사 대상이 아니다
+    "coverage/**",
+    "test-results/**",
+    "playwright-report/**",
   ]),
 ]);
 

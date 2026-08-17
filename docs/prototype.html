@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+<title>나에게 맞는 맥주 찾기</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/static/pretendard.css" />
+<style>
+  :root{
+    --white: #FFFFFF;
+    --ink: #12213D;
+    --ink-2: #0A1830;
+    --red: #FFCA58;
+    --red-dark: #C0141A;
+    --muted: #8B92A0;
+    --line: #E6E8EC;
+    --surface: #F5F6F8;
+  }
+  *{ -webkit-tap-highlight-color: transparent; }
+  html, body{
+    background: var(--white);
+    font-family: 'Pretendard', sans-serif;
+    overscroll-behavior: none;
+  }
+  h1,h2,h3, .display{
+    font-family: 'Pretendard', sans-serif;
+  }
+
+#app{
+max-width: 390px;
+margin: 0 auto;
+min-height: 100dvh;
+position: relative;
+overflow-x: hidden;
+display: flex;
+flex-direction: column;
+background: var(--white);
+}
+
+.app-header{
+flex-shrink: 0;
+height: 52px;
+display: flex;
+align-items: center;
+padding: 0 20px;
+border-bottom: 1px solid var(--line);
+background: var(--white);
+position: relative;
+z-index: 2;
+}
+.brand{
+display: flex;
+align-items: center;
+gap: 7px;
+font-weight: 500;
+font-size: 13px;
+letter-spacing: 0.06em;
+color: var(--ink);
+}
+.brand-dot{
+width: 7px;
+height: 7px;
+border-radius: 50%;
+background: var(--red);
+flex-shrink: 0;
+}
+
+.screen{
+position: relative;
+z-index: 1;
+width: 100%;
+flex: 1;
+min-height: 0;
+display: none;
+flex-direction: column;
+}
+.screen.active{
+display: flex;
+}
+
+/* fade/slide transitions */
+.fade-enter{
+animation: fadeSlideIn 320ms cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes fadeSlideIn{
+from{ opacity: 0; transform: translateY(14px); }
+to{ opacity: 1; transform: translateY(0); }
+}
+.fade-out{
+animation: fadeSlideOut 200ms cubic-bezier(.4,0,1,1) both;
+}
+@keyframes fadeSlideOut{
+from{ opacity: 1; transform: translateY(0); }
+to{ opacity: 0; transform: translateY(-10px); }
+}
+
+/* option card */
+.opt-card{
+transition: transform 160ms cubic-bezier(.34,1.56,.64,1), box-shadow 200ms ease, border-color 200ms ease, background 200ms ease;
+-webkit-user-select: none;
+user-select: none;
+border-width: 2px;
+border-style: solid;
+border-color: var(--line);
+}
+.opt-card:active{
+transform: scale(0.97);
+}
+.opt-card.selected{
+transform: scale(0.98);
+border-color: var(--red);
+background: linear-gradient(180deg, rgba(255,202,88,0.045), rgba(255,202,88,0.01));
+box-shadow: 0 6px 16px -10px rgba(255,202,88,0.45);
+}
+.opt-card.pulse-pop{
+animation: popSelect 340ms cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popSelect{
+0%{ transform: scale(1); }
+35%{ transform: scale(0.94); }
+65%{ transform: scale(1.02); }
+100%{ transform: scale(0.98); }
+}
+
+.icon-badge{
+transition: transform 200ms ease;
+}
+.opt-card:active .icon-badge{
+transform: scale(0.92);
+}
+
+/* stepper */
+.stepper-row{
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 14px 20px 12px;
+}
+.stepper{
+display: flex;
+align-items: center;
+flex: 1;
+}
+.step-circle{
+width: 24px;
+height: 24px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 11px;
+font-weight: 500;
+border: 1.5px solid var(--line);
+color: var(--ink);
+background: var(--white);
+flex-shrink: 0;
+transition: background 220ms ease, border-color 220ms ease, color 220ms ease;
+}
+.step-circle[data-state="current"]{
+background: var(--ink);
+border-color: var(--ink);
+color: #fff;
+}
+.step-circle[data-state="done"]{
+background: var(--red);
+border-color: var(--red);
+color: var(--ink);
+}
+.step-line{
+flex: 1;
+height: 2px;
+background: var(--line);
+margin: 0 4px;
+transition: background 220ms ease;
+}
+.step-line[data-filled="true"]{
+background: var(--red);
+}
+.step-label{
+font-size: 11px;
+font-weight: 500;
+color: var(--ink);
+letter-spacing: 0.03em;
+flex-shrink: 0;
+white-space: nowrap;
+}
+
+/* buttons */
+.btn-primary{
+background: var(--ink);
+transition: transform 140ms ease, background 140ms ease;
+}
+.btn-primary:active{
+transform: scale(0.98);
+background: var(--ink-2);
+}
+.btn-primary-alt{
+background: var(--surface);
+border: 1px solid var(--line);
+transition: transform 140ms ease, background 140ms ease;
+}
+.btn-primary-alt:active{
+transform: scale(0.98);
+background: #ECEDF1;
+}
+.btn-secondary{
+background: var(--surface);
+border: 1px solid var(--line);
+transition: transform 140ms ease, background 140ms ease;
+}
+.btn-secondary:active{
+transform: scale(0.98);
+background: #ECEDF1;
+}
+
+.back-btn{
+color: var(--ink);
+transition: transform 140ms ease, background 140ms ease;
+}
+.back-btn:active{
+transform: scale(0.9);
+background: var(--surface);
+}
+
+/* result card */
+.result-card{
+animation: slideUp 460ms cubic-bezier(.22,1,.36,1) both;
+border: 1px solid var(--line);
+box-shadow: 0 16px 40px -24px rgba(18,33,61,0.25);
+}
+@keyframes slideUp{
+from{ opacity: 0; transform: translateY(48px) scale(0.97); }
+to{ opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.landing-emoji{
+animation: gentleSway 3.6s ease-in-out infinite;
+}
+@keyframes gentleSway{
+0%,100%{ transform: rotate(-4deg) translateY(0); }
+50%{ transform: rotate(4deg) translateY(-6px); }
+}
+
+.foam-ring{
+animation: ringPulse 2.4s ease-out infinite;
+}
+@keyframes ringPulse{
+0%{ transform: scale(0.9); opacity: 0.5; }
+70%{ transform: scale(1.25); opacity: 0; }
+100%{ opacity: 0; }
+}
+
+/* confetti */
+.confetti-piece{
+position: fixed;
+top: -20px;
+z-index: 50;
+border-radius: 2px;
+pointer-events: none;
+animation-name: confettiFall;
+animation-timing-function: cubic-bezier(.25,.46,.45,.94);
+animation-fill-mode: forwards;
+}
+@keyframes confettiFall{
+0%{ transform: translateY(0) rotate(0deg); opacity: 1; }
+100%{ transform: translateY(110vh) rotate(600deg); opacity: 0; }
+}
+
+.tag-pill{
+background: rgba(255,202,88,0.5);
+color: var(--red-dark);
+}
+
+/* beer image / glass illustration */
+.beer-image{
+aspect-ratio: 3 / 4;
+background: var(--surface);
+border: 1px solid var(--line);
+}
+.glass-svg-wrap{
+animation: floatBob 4.2s ease-in-out infinite;
+}
+@keyframes floatBob{
+0%,100%{ transform: translateY(0); }
+50%{ transform: translateY(-6px); }
+}
+.badge-glass{
+background: rgba(255,255,255,0.92);
+backdrop-filter: blur(6px);
+border: 1px solid var(--line);
+}
+
+/* stat pills (ABV / IBU) */
+.stat-pill{
+background: var(--surface);
+border: 1px solid var(--line);
+}
+
+/* reason box */
+.reason-box{
+background: var(--surface);
+border: 1px solid var(--line);
+}
+
+/* card swap (show another recommendation) */
+.card-swap{
+animation: cardSwap 380ms cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes cardSwap{
+0%{ opacity: 0.3; transform: scale(0.96) translateY(6px); }
+100%{ opacity: 1; transform: scale(1) translateY(0); }
+}
+.image-swap{
+animation: cardSwap 380ms cubic-bezier(.22,1,.36,1) both;
+}
+
+/* floating dice reroll button */
+.dice-btn{
+background: var(--red);
+border: 2px solid var(--red);
+box-shadow: 0 12px 28px -8px rgba(18,33,61,0.4), 0 4px 10px -2px rgba(18,33,61,0.25), 0 0 0 4px var(--white);
+transition: transform 160ms cubic-bezier(.34,1.56,.64,1), box-shadow 160ms ease;
+}
+.dice-btn-label{
+color: var(--ink);
+}
+.dice-btn:active{
+transform: scale(0.88);
+}
+.dice-btn.dice-spin{
+animation: diceSpin 480ms cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes diceSpin{
+0%{ transform: rotate(0deg) scale(1); }
+40%{ transform: rotate(200deg) scale(0.85); }
+70%{ transform: rotate(330deg) scale(1.08); }
+100%{ transform: rotate(360deg) scale(1); }
+}
+.dice-fab{
+position: fixed;
+bottom: 26px;
+right: max(20px, calc(50vw - 195px + 20px));
+z-index: 40;
+}
+.dice-fab.is-hidden{
+display: none;
+}
+
+/* rating bottom-sheet modal */
+.rating-overlay{
+position: fixed;
+inset: 0;
+background: rgba(18,33,61,0.45);
+display: flex;
+align-items: flex-end;
+justify-content: center;
+z-index: 70;
+opacity: 0;
+pointer-events: none;
+transition: opacity 220ms ease;
+}
+.rating-overlay.open{
+opacity: 1;
+pointer-events: auto;
+}
+.rating-sheet{
+width: 100%;
+max-width: 390px;
+background: var(--white);
+border-radius: 24px 24px 0 0;
+padding: 30px 24px 34px;
+position: relative;
+transform: translateY(100%);
+transition: transform 300ms cubic-bezier(.22,1,.36,1);
+box-shadow: 0 -16px 40px -20px rgba(18,33,61,0.35);
+}
+.rating-overlay.open .rating-sheet{
+transform: translateY(0);
+}
+.rating-close{
+position: absolute;
+top: 16px;
+right: 16px;
+width: 32px;
+height: 32px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+color: var(--ink);
+transition: background 140ms ease;
+}
+.rating-close:active{
+background: var(--surface);
+}
+.rating-eyebrow{
+font-size: 12px;
+font-weight: 500;
+color: var(--ink);
+letter-spacing: 0.03em;
+margin-bottom: 8px;
+}
+.rating-title{
+font-size: 19px;
+font-weight: 500;
+color: var(--ink);
+line-height: 1.4;
+margin-bottom: 24px;
+}
+.rating-stars{
+display: flex;
+justify-content: center;
+gap: 10px;
+margin-bottom: 4px;
+}
+.rating-star{
+font-size: 34px;
+line-height: 1;
+color: var(--line);
+transition: transform 160ms cubic-bezier(.34,1.56,.64,1), color 160ms ease;
+}
+.rating-star:active{
+transform: scale(0.85);
+}
+.rating-star.filled{
+color: var(--red);
+}
+.rating-thanks{
+display: none;
+flex-direction: column;
+align-items: center;
+text-align: center;
+padding: 10px 0 6px;
+}
+.rating-thanks.show{
+display: flex;
+}
+.rating-thanks-icon{
+font-size: 40px;
+margin-bottom: 10px;
+animation: popSelect 340ms cubic-bezier(.34,1.56,.64,1);
+}
+.rating-thanks-text{
+font-size: 16px;
+font-weight: 500;
+color: var(--ink);
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <header class="app-header">
+    <div class="brand"><span class="brand-dot"></span>맥주 파인더</div>
+  </header>
+
+  <!-- ============ LANDING SCREEN ============ -->
+  <section id="screen-landing" class="screen active fade-enter">
+    <div class="flex-1 flex flex-col justify-between px-6 pt-10 pb-8">
+      <div></div>
+
+      <div class="flex flex-col items-center text-center">
+        <div class="landing-emoji text-7xl mb-6">🍺</div>
+        <h1 class="display text-[28px] leading-[1.25] font-medium text-[#12213D] mb-4">
+          나에게 맞는 맥주 찾기
+        </h1>
+        <p class="text-[#12213D] text-[15px] leading-relaxed max-w-[280px]">
+          간단한 질문 4개에 답하면 딱 맞는 맥주를 추천해드려요.
+        </p>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <button id="btn-start" class="btn-primary w-full text-white font-medium text-[16px] py-4 rounded-xl">
+          시작하기
+        </button>
+        <button id="btn-quick" type="button" class="btn-primary-alt w-full text-[#12213D] font-medium text-[16px] py-4 rounded-xl flex items-center justify-center gap-2">
+          🎲 아무거나 추천받기
+        </button>
+        <span class="text-[#12213D] text-[12px] font-medium tracking-wide">질문 0 / 4 · 30초면 충분해요</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ QUIZ SCREEN (shared shell for Q1-Q4) ============ -->
+  <section id="screen-quiz" class="screen">
+    <!-- stepper bar -->
+    <div class="stepper-row">
+      <button id="btn-back" class="back-btn w-9 h-9 rounded-full flex items-center justify-center -ml-1 flex-shrink-0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div id="stepper" class="stepper"></div>
+      <span id="progress-label" class="step-label">STEP 0/4</span>
+    </div>
+
+    <div id="quiz-content" class="flex-1 px-6 pt-4 pb-10 flex flex-col fade-enter overflow-y-auto">
+      <h2 id="question-title" class="display text-[22px] font-medium text-[#12213D] mb-7 leading-snug"></h2>
+      <div id="options-container" class="flex flex-col gap-3"></div>
+    </div>
+  </section>
+
+  <!-- ============ RESULT SCREEN ============ -->
+  <section id="screen-result" class="screen">
+    <div class="px-5 pt-4 pb-2">
+      <div class="flex items-center mb-2">
+        <button id="btn-back-result" class="back-btn w-9 h-9 rounded-full flex items-center justify-center -ml-1 flex-shrink-0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex-1 px-6 pt-2 pb-10 flex flex-col items-center">
+      <p class="text-[#12213D] text-[13px] font-medium tracking-wide uppercase mb-5">당신을 위한 완벽한 한 잔</p>
+
+      <div class="relative w-full">
+        <div id="result-card" class="result-card bg-white rounded-2xl w-full p-6 flex flex-col items-center text-center relative overflow-hidden">
+
+          <!-- beer image (3:4, illustrated glass) -->
+          <div id="result-image" class="beer-image w-full rounded-xl relative overflow-hidden mb-5">
+            <img id="result-photo" alt="" class="absolute inset-0 w-full h-full object-cover" />
+            <div id="result-match-badge" class="badge-glass absolute top-3 left-3 rounded-full pl-2.5 pr-3 py-1.5 flex items-center gap-1.5">
+              <span id="result-stars" class="text-[11px] leading-none tracking-tight"></span>
+              <span id="result-match-pct" class="text-[11px] font-medium text-[#C0141A] leading-none"></span>
+            </div>
+            <div id="result-garnish" class="badge-glass absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center text-lg"></div>
+          </div>
+
+          <h3 id="result-name" class="display text-[23px] font-semibold text-[#12213D] mb-1.5"></h3>
+          <p id="result-tagline" class="text-[#12213D] text-[14px] italic mb-4 leading-snug"></p>
+
+          <div class="w-full flex gap-2.5 mb-5">
+            <div class="stat-pill flex-1 rounded-xl py-2.5 flex flex-col items-center">
+              <span class="text-[10px] font-medium tracking-wide uppercase text-[#12213D]">도수</span>
+              <span id="result-abv" class="text-[15px] font-medium text-[#12213D]"></span>
+            </div>
+            <div class="stat-pill flex-1 rounded-xl py-2.5 flex flex-col items-center">
+              <span class="text-[10px] font-medium tracking-wide uppercase text-[#12213D]">쓴맛(IBU)</span>
+              <span id="result-ibu" class="text-[15px] font-medium text-[#12213D]"></span>
+            </div>
+          </div>
+
+          <div id="result-tags" class="flex gap-2 mb-5 flex-wrap justify-center"></div>
+
+          <div class="reason-box w-full rounded-xl px-4 py-3.5 mb-6 text-left flex items-start gap-2.5">
+            <span class="text-base leading-none mt-0.5">💡</span>
+            <p id="result-reason" class="text-[#12213D]/80 text-[13.5px] leading-relaxed font-medium"></p>
+          </div>
+
+          <div class="w-full flex flex-col gap-5 text-left">
+            <div>
+              <p class="text-[12px] font-semibold tracking-wide uppercase text-[#12213D] mb-1">맛</p>
+              <p id="result-taste" class="text-[#12213D]/85 text-[15px] leading-relaxed font-medium"></p>
+            </div>
+            <div>
+              <p class="text-[12px] font-semibold tracking-wide uppercase text-[#12213D] mb-1">이럴 때 딱</p>
+              <p id="result-for" class="text-[#12213D]/85 text-[15px] leading-relaxed font-medium"></p>
+            </div>
+            <div>
+              <p class="text-[12px] font-semibold tracking-wide uppercase text-[#12213D] mb-1">안주 추천</p>
+              <div id="result-pairing" class="flex flex-col gap-1.5 mt-1"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full flex flex-col gap-3 mt-7">
+        <button id="btn-restart" class="btn-secondary w-full text-[#12213D] font-medium text-[15px] py-3.5 rounded-xl">
+          처음부터 다시하기
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- floating dice button: reroll recommendation (always fixed bottom-right, only shown on result screen) -->
+  <button id="btn-another" aria-label="다른 추천 보기" class="dice-btn dice-fab is-hidden w-[68px] h-[68px] rounded-[24px] flex flex-col items-center justify-center">
+    <span class="text-2xl leading-none">🎲</span>
+    <span class="dice-btn-label text-[12px] font-medium leading-none tracking-tight mt-1">랜덤 추천</span>
+  </button>
+
+  <!-- ============ RATING MODAL (bottom sheet) ============ -->
+  <div id="rating-modal" class="rating-overlay">
+    <div class="rating-sheet">
+      <button id="rating-close" type="button" class="rating-close" aria-label="닫기">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      </button>
+
+      <div id="rating-body">
+        <p class="rating-eyebrow">피드백을 남겨주세요</p>
+        <h3 class="rating-title">이 맥주 추천이<br/>얼마나 마음에 드시나요?</h3>
+        <div id="rating-stars" class="rating-stars">
+          <button type="button" class="rating-star" data-value="1">★</button>
+          <button type="button" class="rating-star" data-value="2">★</button>
+          <button type="button" class="rating-star" data-value="3">★</button>
+          <button type="button" class="rating-star" data-value="4">★</button>
+          <button type="button" class="rating-star" data-value="5">★</button>
+        </div>
+      </div>
+
+      <div id="rating-thanks" class="rating-thanks">
+        <div class="rating-thanks-icon">🙌</div>
+        <p class="rating-thanks-text">소중한 의견 감사해요!</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- DATA ---------------- */
+
+  const Q1 = {
+    key: "company",
+    title: "오늘은 누구와 함께 하시나요?",
+    options: [
+      { id:"alone", icon:"👤", label:"혼자" },
+      { id:"partner", icon:"❤️", label:"연인" },
+      { id:"friends", icon:"👯", label:"친구" },
+      { id:"family", icon:"👨‍👩‍👧", label:"가족" },
+      { id:"colleagues", icon:"💼", label:"동료" },
+    ]
+  };
+
+  const Q2_WHY = {
+    key: "occasion",
+    title: "오늘 방문한 이유가 궁금해요",
+    options: [
+      { id:"celebration", icon:"🎉", label:"기념일 · 축하" },
+      { id:"meal", icon:"🍽️", label:"맛있는 음식과 함께" },
+      { id:"chill", icon:"😌", label:"가볍게 힐링" },
+      { id:"gathering", icon:"👋", label:"오랜만의 모임" },
+    ]
+  };
+
+  const Q3_HOW = {
+    key: "source",
+    title: "저희 매장은 어떻게 알고 오셨나요?",
+    options: [
+      { id:"sns", icon:"📱", label:"SNS(인스타·블로그)" },
+      { id:"referral", icon:"👥", label:"지인 추천" },
+      { id:"walkby", icon:"🚶", label:"지나가다 발견" },
+      { id:"revisit", icon:"🔁", label:"재방문(단골)" },
+    ]
+  };
+
+  const Q4_STYLE = {
+    key: "style",
+    title: "어떤 스타일의 맥주가 끌리시나요?",
+    options: [
+      { id:"clean-lager", icon:"🧊", label:"깔끔 · 청량", subtitle:"라거 · 라들러 · 첫잔 추천" },
+      { id:"hop-forward", icon:"🍊", label:"쌉쌀 · 시트러스", subtitle:"페일에일 · IPA" },
+      { id:"wheat-yeast", icon:"🍌", label:"향긋 · 부드러운", subtitle:"밀맥주 · 벨지안" },
+      { id:"sour-funky", icon:"🍋", label:"새콤달콤 · 상큼", subtitle:"고제 · 람빅 · 사워" },
+      { id:"dark-malty", icon:"☕", label:"고소 · 진한 흑맥주", subtitle:"스타우트 · 포터" },
+      { id:"barrel-strong", icon:"🥃", label:"묵직한 한 잔", subtitle:"배럴에이지드 · 스트롱에일" },
+      { id:"dessert-specialty", icon:"🍰", label:"디저트 · 스페셜티", subtitle:"이색 부재료 맥주" },
+    ]
+  };
+
+  const BEER_DB = {
+    "clean-lager": {
+      name: "골든 라거", emoji: "🧊",
+      tags: ["청량함", "가벼움", "부드러운 목넘김"],
+      taste: "청량하고 깔끔한 목넘김에 은은한 몰트 향이 감도는 산뜻한 라거.",
+      tagline: "시원하게 들이켜는 첫 잔에 가장 잘 어울려요.",
+      perfectFor: "첫 잔이 필요한 순간, 부담 없이 즐기고 싶을 때.",
+      pairing: ["감자튀김", "치킨윙", "그릴드 소시지"],
+      abv: "4.8%", ibu: 14, match: 95,
+      color: "#F0C34A", colorLight: "#F8DE8E", foam: "#FFFBEE", garnish: "🧊",
+      photo: "https://images.pexels.com/photos/5538223/pexels-photo-5538223.jpeg?auto=compress&cs=tinysrgb&w=800"
+    },
+    "hop-forward": {
+      name: "트로피컬 IPA", emoji: "🍊",
+      tags: ["쌉쌀함", "시트러스", "화려한 향"],
+      taste: "자몽과 열대과일 향이 화려하게 퍼지는 홉 풍미 가득한 IPA.",
+      tagline: "기분 좋은 쌉쌀함과 상큼한 과일향의 조화.",
+      perfectFor: "향이 풍부한 한 잔, 화려한 맛을 원할 때.",
+      pairing: ["프라이드 치킨", "타코", "블루치즈"],
+      abv: "6.5%", ibu: 55, match: 93,
+      color: "#E08A2E", colorLight: "#F4B85E", foam: "#FFEFC9", garnish: "🍊",
+      photo: "https://images.pexels.com/photos/13027856/pexels-photo-13027856.jpeg?auto=compress&cs=tinysrgb&w=800"
+    },
+    "wheat-yeast": {
+      name: "바나나 클로브 바이젠", emoji: "🍌",
+      tags: ["향긋함", "부드러움", "달콤함"],
+      taste: "바나나와 정향의 은은한 향이 감도는 부드럽고 향긋한 밀맥주.",
+      tagline: "부드러운 목넘김과 풍성한 과일·향신료 향.",
+      perfectFor: "향긋하고 부드러운 맥주를 찾을 때.",
+      pairing: ["소시지 플래터", "훈제 연어", "프레첼"],
+      abv: "5.3%", ibu: 13, match: 92,
+      color: "#E9C97A", colorLight: "#F5E3AE", foam: "#FFF9E8", garnish: "🍌",
+      photo: "https://images.pexels.com/photos/5538222/pexels-photo-5538222.jpeg?auto=compress&cs=tinysrgb&w=800"
+    },
+    "sour-funky": {
+      name: "레몬 고제", emoji: "🍋",
+      tags: ["새콤달콤", "상큼함", "리프레시"],
+      taste: "레몬과 베리의 상큼한 산미가 침샘을 자극하는 새콤달콤한 사워.",
+      tagline: "와인처럼 상큼하게, 리프레시가 필요할 때 딱이에요.",
+      perfectFor: "가볍고 상큼한 리프레시가 필요할 때.",
+      pairing: ["세비체", "염소치즈", "산뜻한 샐러드"],
+      abv: "4.2%", ibu: 8, match: 91,
+      color: "#E8577A", colorLight: "#F191A9", foam: "#FDE3EA", garnish: "🍋",
+      photo: "https://images.pexels.com/photos/5538225/pexels-photo-5538225.jpeg?auto=compress&cs=tinysrgb&w=800"
+    },
+    "dark-malty": {
+      name: "카카오 스타우트", emoji: "☕",
+      tags: ["고소함", "진한 풍미", "다크"],
+      taste: "커피와 다크초콜릿 향이 진하게 어우러진 묵직하고 고소한 흑맥주.",
+      tagline: "커피·초콜릿 향 가득한 진하고 고소한 한 잔.",
+      perfectFor: "진하고 묵직한 풍미를 원할 때.",
+      pairing: ["초콜릿 케이크", "바비큐 립", "바닐라 아이스크림"],
+      abv: "6.2%", ibu: 32, match: 96,
+      color: "#2B160C", colorLight: "#4A2A17", foam: "#E4D2B8", garnish: "☕",
+      photo: "https://images.pexels.com/photos/5659493/pexels-photo-5659493.jpeg?auto=compress&cs=tinysrgb&w=800"
+    },
+    "barrel-strong": {
+      name: "오크 배럴 스트롱 에일", emoji: "🥃",
+      tags: ["고도수", "깊은 여운", "위스키향"],
+      taste: "위스키 오크통에서 숙성된 깊고 진한 풍미, 은은한 바닐라와 카라멜 향.",
+      tagline: "천천히 음미하는 위스키·오크향의 고도수 한 잔.",
+      perfectFor: "깊고 진한 맛을 천천히 음미하고 싶을 때.",
+      pairing: ["다크초콜릿", "블루치즈", "견과류"],
+      abv: "9.5%", ibu: 25, match: 90,
+      color: "#4A2410", colorLight: "#6E3A1C", foam: "#D8B98A", garnish: "🥃",
+      photo: "https://images.pexels.com/photos/5659756/pexels-photo-5659756.jpeg?auto=compress&cs=tinysrgb&w=800"
+    },
+    "dessert-specialty": {
+      name: "디저트 페이스트리 스타우트", emoji: "🍰",
+      tags: ["달콤함", "이색 부재료", "스페셜티"],
+      taste: "마시멜로우와 캐러멜, 바닐라가 어우러진 디저트 같은 달콤한 스타우트.",
+      tagline: "인스타그래머블한 달콤함, 도전해볼 만한 특별한 한 잔.",
+      perfectFor: "특별하고 재미있는 맛을 원할 때.",
+      pairing: ["티라미수", "마시멜로우 스모어", "캐러멜 팝콘"],
+      abv: "7.0%", ibu: 20, match: 94,
+      color: "#3B2013", colorLight: "#5C3820", foam: "#F2D9B8", garnish: "🍰",
+      photo: "https://images.pexels.com/photos/5538224/pexels-photo-5538224.jpeg?auto=compress&cs=tinysrgb&w=800"
+    }
+  };
+
+  const COMPANY_PHRASE = {
+    alone: "혼자서",
+    partner: "연인과 함께",
+    friends: "친구들과 함께",
+    family: "가족과 함께",
+    colleagues: "동료들과 함께"
+  };
+
+  const OCCASION_REASON = {
+    celebration: "특별한 기념일",
+    meal: "맛있는 음식과 함께하는 시간",
+    chill: "가볍게 힐링하는 시간",
+    gathering: "오랜만에 모이는 자리"
+  };
+
+  const TASTE_ADJ = {
+    "clean-lager": "깔끔하고 청량한",
+    "hop-forward": "쌉쌀하고 시트러스 향 가득한",
+    "wheat-yeast": "향긋하고 부드러운",
+    "sour-funky": "새콤달콤하고 상큼한",
+    "dark-malty": "고소하고 진한",
+    "barrel-strong": "묵직하고 깊은",
+    "dessert-specialty": "달콤하고 특별한"
+  };
+
+  /* ---------------- STATE ---------------- */
+
+  const state = {
+    step: 0, // 0 = landing, 1..4 = questions, 5 = result
+    company: null,
+    occasion: null,
+    source: null,
+    style: null,
+  };
+
+  const els = {
+    landing: document.getElementById('screen-landing'),
+    quiz: document.getElementById('screen-quiz'),
+    result: document.getElementById('screen-result'),
+    quizContent: document.getElementById('quiz-content'),
+    questionTitle: document.getElementById('question-title'),
+    optionsContainer: document.getElementById('options-container'),
+    stepper: document.getElementById('stepper'),
+    progressLabel: document.getElementById('progress-label'),
+    backBtn: document.getElementById('btn-back'),
+    ratingOverlay: document.getElementById('rating-modal'),
+    ratingBody: document.getElementById('rating-body'),
+    ratingThanks: document.getElementById('rating-thanks'),
+    ratingStars: Array.from(document.querySelectorAll('.rating-star')),
+    ratingClose: document.getElementById('rating-close'),
+  };
+
+  /* ---------------- RENDER ---------------- */
+
+  function getQuestionForStep(step){
+    if(step === 1) return Q1;
+    if(step === 2) return Q2_WHY;
+    if(step === 3) return Q3_HOW;
+    if(step === 4) return Q4_STYLE;
+    return null;
+  }
+
+  function selectedValueForStep(step){
+    if(step === 1) return state.company;
+    if(step === 2) return state.occasion;
+    if(step === 3) return state.source;
+    if(step === 4) return state.style;
+    return null;
+  }
+
+  function renderQuestion(step, direction){
+    const q = getQuestionForStep(step);
+    if(!q) return;
+
+    els.quizContent.classList.remove('fade-enter');
+    void els.quizContent.offsetWidth; // reflow to restart animation
+
+    els.questionTitle.textContent = q.title;
+    els.optionsContainer.innerHTML = '';
+
+    const selectedVal = selectedValueForStep(step);
+
+    q.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'opt-card w-full bg-white border-2 rounded-2xl px-5 py-4 flex items-center gap-4 text-left';
+      btn.style.animationDelay = (idx * 40) + 'ms';
+      btn.dataset.id = opt.id;
+      if(opt.id === selectedVal) btn.classList.add('selected');
+
+      btn.innerHTML = `
+        <span class="icon-badge w-12 h-12 rounded-xl bg-[#F5F6F8] flex items-center justify-center text-2xl flex-shrink-0">${opt.icon}</span>
+        <span class="flex flex-col min-w-0">
+          <span class="text-[#12213D] font-semibold text-[16px] leading-tight">${opt.label}</span>
+          ${opt.subtitle ? `<span class="text-[#12213D] text-[12px] font-medium mt-0.5 truncate">${opt.subtitle}</span>` : ''}
+        </span>
+        <span class="ml-auto opt-check text-[#FFCA58] text-lg flex-shrink-0 ${opt.id === selectedVal ? '' : 'opacity-0'}">✓</span>
+      `;
+
+      btn.addEventListener('click', () => onSelectOption(step, q.key, opt.id));
+      els.optionsContainer.appendChild(btn);
+    });
+
+    els.quizContent.classList.add('fade-enter');
+    updateProgress(step);
+    els.backBtn.style.visibility = 'visible';
+  }
+
+  function updateProgress(step){
+    const total = 4;
+    const s = Math.max(0, Math.min(step, total));
+    let html = '';
+    for(let i = 1; i <= total; i++){
+      const stepState = i < s ? 'done' : i === s ? 'current' : 'upcoming';
+      html += `<div class="step-circle" data-state="${stepState}">${stepState === 'done' ? '✓' : i}</div>`;
+      if(i < total){
+        html += `<div class="step-line" data-filled="${i < s}"></div>`;
+      }
+    }
+    els.stepper.innerHTML = html;
+    els.progressLabel.textContent = 'STEP ' + s + '/' + total;
+  }
+
+  function onSelectOption(step, key, value){
+    // pop animation
+    const clicked = els.optionsContainer.querySelector(`[data-id="${value}"]`);
+    if(clicked){
+      clicked.classList.add('pulse-pop');
+      clicked.classList.add('selected');
+      const check = clicked.querySelector('.opt-check');
+      if(check) check.classList.remove('opacity-0');
+    }
+
+    state[key] = value;
+
+    setTimeout(() => {
+      goToStep(step + 1);
+    }, 260);
+  }
+
+  function goToStep(step){
+    state.step = step;
+
+    if(step === 0){
+      showScreen('landing');
+      updateProgressReset();
+      return;
+    }
+
+    if(step >= 1 && step <= 4){
+      showScreen('quiz');
+      renderQuestion(step);
+      return;
+    }
+
+    if(step === 5){
+      showResult();
+      return;
+    }
+  }
+
+  function updateProgressReset(){
+    updateProgress(0);
+  }
+
+  function showScreen(name){
+    [els.landing, els.quiz, els.result].forEach(s => {
+      s.classList.remove('active', 'fade-enter');
+    });
+    const target = name === 'landing' ? els.landing : name === 'quiz' ? els.quiz : els.result;
+    target.classList.add('active');
+    void target.offsetWidth;
+    target.classList.add('fade-enter');
+
+    const diceFab = document.getElementById('btn-another');
+    if(diceFab){
+      diceFab.classList.toggle('is-hidden', name !== 'result');
+    }
+  }
+
+  function goBack(){
+    if(state.step <= 0) return;
+    goToStep(state.step - 1);
+  }
+
+  /* ---------------- RESULT ---------------- */
+
+  let currentDbKey = null;
+
+  function buildStars(match){
+    const full = Math.round(match / 20); // 5 stars = 100%
+    let html = '';
+    for(let i = 0; i < 5; i++){
+      html += `<span class="${i < full ? 'text-[#FFCA58]' : 'text-[#D8DBE2]'}">★</span>`;
+    }
+    return html;
+  }
+
+  function buildReason(styleId){
+    const tasteAdj = TASTE_ADJ[styleId] || '';
+    const companyPhrase = COMPANY_PHRASE[state.company];
+    const occasionPhrase = OCCASION_REASON[state.occasion];
+
+    if(!companyPhrase){
+      return `질문 없이 골라드리는 오늘의 심플 추천이에요! ${tasteAdj} 맥주, 부담 없이 즐겨보세요.`;
+    }
+
+    let sentence = `${companyPhrase} ${tasteAdj} 맥주를 좋아하는 당신을 위해 골랐어요.`;
+    if(occasionPhrase){
+      sentence += ` ${occasionPhrase}에도 잘 어울려요.`;
+    }
+    return sentence;
+  }
+
+  function renderBeerResult(dbKey){
+    currentDbKey = dbKey;
+    const beer = BEER_DB[dbKey];
+    state.style = dbKey;
+
+    const photoEl = document.getElementById('result-photo');
+    photoEl.src = beer.photo;
+    photoEl.alt = beer.name;
+    document.getElementById('result-name').textContent = beer.name;
+    document.getElementById('result-tagline').textContent = beer.tagline;
+    document.getElementById('result-abv').textContent = beer.abv;
+    document.getElementById('result-ibu').textContent = beer.ibu;
+    document.getElementById('result-stars').innerHTML = buildStars(beer.match);
+    document.getElementById('result-match-pct').textContent = '매칭 ' + beer.match + '%';
+    document.getElementById('result-garnish').textContent = beer.garnish;
+    document.getElementById('result-reason').textContent = buildReason(dbKey);
+    document.getElementById('result-taste').textContent = beer.taste;
+    document.getElementById('result-for').textContent = beer.perfectFor;
+
+    const tagsWrap = document.getElementById('result-tags');
+    tagsWrap.innerHTML = beer.tags.map(t => `<span class="tag-pill text-[12px] font-medium px-3 py-1 rounded-full">${t}</span>`).join('');
+
+    const pairingWrap = document.getElementById('result-pairing');
+    pairingWrap.innerHTML = beer.pairing.map(p => `
+      <div class="flex items-center gap-2 text-[#12213D]/80 text-[15px] font-medium">
+        <span class="text-[#FFCA58]">•</span><span>${p}</span>
+      </div>
+    `).join('');
+  }
+
+  function showResult(){
+    renderBeerResult(state.style);
+    showScreen('result');
+    launchConfetti(26);
+    scheduleRatingPrompt();
+  }
+
+  function quickRandomRecommendation(){
+    const keys = Object.keys(BEER_DB);
+    const randomKey = keys[Math.floor(Math.random() * keys.length)];
+
+    // quick path skips the quiz entirely — no company/occasion/source collected
+    state.company = null;
+    state.occasion = null;
+    state.source = null;
+    state.step = 5;
+
+    renderBeerResult(randomKey);
+    showScreen('result');
+    launchConfetti(26);
+    scheduleRatingPrompt();
+  }
+
+  function showAnotherRecommendation(){
+    const otherKeys = Object.keys(BEER_DB).filter(k => k !== currentDbKey);
+    const nextKey = otherKeys[Math.floor(Math.random() * otherKeys.length)];
+
+    renderBeerResult(nextKey);
+
+    // light re-pop animation instead of the full slide-up entrance
+    const card = document.getElementById('result-card');
+    const image = document.getElementById('result-image');
+    [card, image].forEach(el => {
+      el.classList.remove('card-swap');
+      void el.offsetWidth;
+      el.classList.add('card-swap');
+    });
+
+    // spin the dice button itself
+    const diceBtn = document.getElementById('btn-another');
+    diceBtn.classList.remove('dice-spin');
+    void diceBtn.offsetWidth;
+    diceBtn.classList.add('dice-spin');
+
+    launchConfetti(14);
+  }
+
+  /* ---------------- RATING MODAL ---------------- */
+
+  let ratingTimer = null;
+  let selectedRating = 0;
+
+  function scheduleRatingPrompt(){
+    clearTimeout(ratingTimer);
+    ratingTimer = setTimeout(openRatingModal, 1400);
+  }
+
+  function resetRatingUI(){
+    selectedRating = 0;
+    els.ratingStars.forEach(star => star.classList.remove('filled'));
+    els.ratingBody.style.display = '';
+    els.ratingThanks.classList.remove('show');
+  }
+
+  function openRatingModal(){
+    resetRatingUI();
+    els.ratingOverlay.classList.add('open');
+  }
+
+  function closeRatingModal(){
+    els.ratingOverlay.classList.remove('open');
+  }
+
+  function selectRating(value){
+    selectedRating = value;
+    els.ratingStars.forEach(star => {
+      star.classList.toggle('filled', Number(star.dataset.value) <= value);
+    });
+
+    setTimeout(() => {
+      els.ratingBody.style.display = 'none';
+      els.ratingThanks.classList.add('show');
+    }, 260);
+
+    setTimeout(closeRatingModal, 1600);
+  }
+
+  els.ratingStars.forEach(star => {
+    star.addEventListener('click', () => selectRating(Number(star.dataset.value)));
+  });
+  els.ratingClose.addEventListener('click', closeRatingModal);
+  els.ratingOverlay.addEventListener('click', (e) => {
+    if(e.target === els.ratingOverlay) closeRatingModal();
+  });
+
+  /* ---------------- CONFETTI ---------------- */
+
+  function launchConfetti(count){
+    count = count || 26;
+    const colors = ['#FFCA58', '#12213D', '#C0141A', '#8B92A0'];
+    const appRect = document.getElementById('app').getBoundingClientRect();
+
+    for(let i = 0; i < count; i++){
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      const size = 6 + Math.random() * 6;
+      const isCircle = Math.random() > 0.5;
+      piece.style.width = size + 'px';
+      piece.style.height = (isCircle ? size : size * 1.6) + 'px';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      if(isCircle) piece.style.borderRadius = '50%';
+      piece.style.left = (appRect.left + Math.random() * appRect.width) + 'px';
+      const duration = 900 + Math.random() * 700;
+      piece.style.animationDuration = duration + 'ms';
+      piece.style.animationDelay = (Math.random() * 200) + 'ms';
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), duration + 400);
+    }
+  }
+
+  /* ---------------- EVENTS ---------------- */
+
+  document.getElementById('btn-start').addEventListener('click', () => goToStep(1));
+  document.getElementById('btn-quick').addEventListener('click', quickRandomRecommendation);
+  els.backBtn.addEventListener('click', goBack);
+  document.getElementById('btn-back-result').addEventListener('click', () => {
+    clearTimeout(ratingTimer);
+    closeRatingModal();
+    goToStep(4);
+  });
+  document.getElementById('btn-restart').addEventListener('click', () => {
+    clearTimeout(ratingTimer);
+    closeRatingModal();
+    state.company = null;
+    state.occasion = null;
+    state.source = null;
+    state.style = null;
+    goToStep(0);
+  });
+  document.getElementById('btn-another').addEventListener('click', showAnotherRecommendation);
+
+})();
+</script>
+</body>
+</html>

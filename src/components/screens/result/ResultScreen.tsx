@@ -1,7 +1,8 @@
 "use client";
 
 import { BackButton, Screen, SecondaryButton } from "@/components/ui";
-import type { Recommendation } from "@/types";
+import { useQuiz } from "@/context";
+import { useReplayAnimation } from "@/hooks";
 import { BeerPhoto } from "./BeerPhoto";
 
 /** 별 5개가 매칭율 100%에 해당한다 (프로토타입 `buildStars`) */
@@ -21,19 +22,15 @@ const SECTION_TITLE =
 /** 섹션 본문 공통 스타일 */
 const SECTION_BODY = "text-ink/85 text-[15px] leading-relaxed font-medium";
 
-export interface ResultScreenProps {
-  recommendation: Recommendation;
-  /** 뒤로가기 — 프로토타입과 같이 마지막 질문 화면으로 */
-  onBack: () => void;
-  /** "처음부터 다시하기" — 답변을 지우고 랜딩으로 */
-  onRestart: () => void;
-}
+export function ResultScreen() {
+  const { recommendation, swapCount, back, restart } = useQuiz();
 
-export function ResultScreen({
-  recommendation,
-  onBack,
-  onRestart,
-}: ResultScreenProps) {
+  // "다른 추천"일 때는 등장 애니메이션(slideUp) 대신 가벼운 스왑으로 바꾼다
+  const cardRef = useReplayAnimation<HTMLDivElement>("card-swap", swapCount);
+  const imageRef = useReplayAnimation<HTMLDivElement>("card-swap", swapCount);
+
+  if (!recommendation) return null;
+
   const { beer, matchPercent, reason } = recommendation;
   const filledStars = Math.round(matchPercent / (100 / STAR_COUNT));
 
@@ -41,7 +38,7 @@ export function ResultScreen({
     <Screen>
       <div className="px-5 pt-4 pb-2">
         <div className="mb-2 flex items-center">
-          <BackButton onClick={onBack} />
+          <BackButton onClick={back} />
         </div>
       </div>
 
@@ -51,8 +48,14 @@ export function ResultScreen({
         </p>
 
         <div className="relative w-full">
-          <div className="result-card border-line relative flex w-full flex-col items-center overflow-hidden rounded-2xl border bg-white p-6 text-center shadow-[0_16px_40px_-24px_rgba(18,33,61,0.25)]">
-            <div className="border-line bg-surface relative mb-5 aspect-[3/4] w-full overflow-hidden rounded-xl border">
+          <div
+            ref={cardRef}
+            className="result-card border-line relative flex w-full flex-col items-center overflow-hidden rounded-2xl border bg-white p-6 text-center shadow-[0_16px_40px_-24px_rgba(18,33,61,0.25)]"
+          >
+            <div
+              ref={imageRef}
+              className="border-line bg-surface relative mb-5 aspect-[3/4] w-full overflow-hidden rounded-xl border"
+            >
               <BeerPhoto
                 key={beer.photo}
                 src={beer.photo}
@@ -163,7 +166,7 @@ export function ResultScreen({
         </div>
 
         <div className="mt-7 flex w-full flex-col gap-3">
-          <SecondaryButton size="md" onClick={onRestart}>
+          <SecondaryButton size="md" onClick={restart}>
             처음부터 다시하기
           </SecondaryButton>
         </div>

@@ -50,6 +50,40 @@ export function RatingSheet({ open, onClose, onRate }: RatingSheetProps) {
     return () => timers.forEach(clearTimeout);
   }, []);
 
+  /**
+   * 닫기 콜백은 호출부에서 인라인 함수로 넘어와 매 렌더 새로 만들어진다.
+   * 아래 포커스 효과가 그때마다 다시 돌지 않도록 ref 에 담아 쓴다.
+   */
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  /**
+   * 열리면 시트로 포커스를 옮기고 ESC 로 닫을 수 있게 한다.
+   * 닫힐 때는 원래 포커스가 있던 곳(결과 화면의 버튼)으로 되돌린다.
+   * `preventScroll` 을 주는 이유는 포커스 때문에 화면이 튀지 않게 하려는 것이다 —
+   * 프로토타입의 열림/닫힘 모습은 그대로다.
+   */
+  useEffect(() => {
+    if (!open) return;
+
+    restoreFocusRef.current = document.activeElement as HTMLElement | null;
+    sheetRef.current?.focus({ preventScroll: true });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onCloseRef.current();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      restoreFocusRef.current?.focus({ preventScroll: true });
+    };
+  }, [open]);
+
   const handleRate = (value: number) => {
     if (rating > 0) return; // 이미 고른 뒤에는 감사 화면으로 넘어가는 중이다
 
@@ -65,8 +99,12 @@ export function RatingSheet({ open, onClose, onRate }: RatingSheetProps) {
   return (
     <div
       role="dialog"
+      aria-modal="true"
       aria-label="추천 만족도"
       aria-hidden={!open}
+      // 닫혀 있어도 DOM 에 남아 있으므로(슬라이드 재생용) 그동안 Tab 이
+      // 시트 안으로 들어가지 않도록 막는다. 화면에는 아무 변화가 없다.
+      inert={!open}
       onClick={(event) => {
         // 시트 바깥(딤 영역)을 눌렀을 때만 닫는다
         if (event.target === event.currentTarget) onClose();
@@ -77,7 +115,12 @@ export function RatingSheet({ open, onClose, onRate }: RatingSheetProps) {
         open && "open",
       )}
     >
-      <div className="rating-sheet max-w-shell relative w-full rounded-t-[24px] bg-white px-6 pt-[30px] pb-[34px] shadow-[0_-16px_40px_-20px_rgba(18,33,61,0.35)]">
+      <div
+        ref={sheetRef}
+        // 열릴 때 포커스를 받기 위한 것 — Tab 순서에는 들어가지 않는다
+        tabIndex={-1}
+        className="rating-sheet max-w-shell relative w-full rounded-t-[24px] bg-white px-6 pt-[30px] pb-[34px] shadow-[0_-16px_40px_-20px_rgba(18,33,61,0.35)] focus:outline-none"
+      >
         <button
           type="button"
           onClick={onClose}
@@ -126,8 +169,17 @@ export function RatingSheet({ open, onClose, onRate }: RatingSheetProps) {
         )}
 
         {thanks && (
-          <div className="flex flex-col items-center pt-[10px] pb-[6px] text-center">
-            <div className="rating-thanks-icon mb-[10px] text-[40px]">🙌</div>
+          // 별을 고르면 이 화면으로 바뀐다 — 바뀐 사실을 소리로도 알린다
+          <div
+            role="status"
+            className="flex flex-col items-center pt-[10px] pb-[6px] text-center"
+          >
+            <div
+              aria-hidden="true"
+              className="rating-thanks-icon mb-[10px] text-[40px]"
+            >
+              🙌
+            </div>
             <p className="text-ink text-[16px] font-medium">
               소중한 의견 감사해요!
             </p>

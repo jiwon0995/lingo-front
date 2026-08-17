@@ -336,7 +336,15 @@ h3,
   animation-fill-mode: forwards;
 }
 
-/* 주사위 리롤 FAB */
+/* 주사위 리롤 FAB
+ * 위치는 셸(390px) 오른쪽 안쪽에 붙인다 — 화면이 넓어지면 셸을 따라간다.
+ * 195px = 셸 너비의 절반, 20px = 셸 안쪽 여백. 프로토타입 원본 그대로다. */
+.dice-fab {
+  position: fixed;
+  bottom: 26px;
+  right: max(20px, calc(50vw - 195px + 20px));
+  z-index: 40;
+}
 .dice-btn {
   background: var(--red);
   border: 2px solid var(--red);

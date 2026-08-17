@@ -14,6 +14,12 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // e2e(`e2e/`)는 Playwright 가 따로 돌린다 — 여기서는 순수 로직만 본다
     include: ["src/**/*.test.ts"],
+    coverage: {
+      // 화면 컴포넌트는 e2e 가 맡으므로 커버리지는 로직·데이터만 잰다
+      include: ["src/lib/**", "src/data/**"],
+      reporter: ["text", "html"],
+    },
   },
 });

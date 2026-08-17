@@ -6,4 +6,5 @@ export type {
   QuizAnswers,
   ScoreEffect,
 } from "./question";
+export type { RatingSubmission, RatingSubmitHandler } from "./feedback";
 export type { Recommendation, UserVector } from "./result";

@@ -2,9 +2,10 @@
  * 질문 데이터 회귀 검사 — `npm run check:questions`
  *
  * 1. 질문 · 선택지 문구가 프로토타입(`docs/prototype.html`) 원문과 같은지
+ *    (스타일 질문만 원문 한 화면을 두 화면으로 펼쳐서 대조한다)
  *    (피그마 디자인이 확정돼 있어서 문구는 바뀌면 안 된다)
  * 2. Q1(company) · Q2(occasion) 의 보조 가중치와 moodTags 가
- *    Q4(style) 의 결과를 뒤집지 않는지 — 모든 답변 조합을 전수 확인
+ *    Q5(style) 의 결과를 뒤집지 않는지 — 모든 답변 조합을 전수 확인
  *    (스타일 가산점을 뺀 "유사도만" 랭킹도 같이 재서 참고용으로 찍는다)
  *
  * 질문 · 선택지 · 가중치 · 맥주 데이터를 고쳤다면 이 스크립트를 돌린다.
@@ -72,7 +73,28 @@ const proto = new Function(
    return { Q1, Q2_WHY, Q3_HOW, Q4_STYLE, COMPANY_PHRASE, OCCASION_REASON, TASTE_ADJ };`,
 )();
 
-const protoQuestions = [proto.Q1, proto.Q2_WHY, proto.Q3_HOW, proto.Q4_STYLE];
+/**
+ * 프로토타입은 스타일 질문이 한 화면(`Q4_STYLE`)이지만 앱은 두 화면으로 쪼갰다.
+ * 원문에서 **서브타이틀만 남긴 화면**(`styleFamily`) · **라벨만 남긴 화면**(`style`)
+ * 으로 펼쳐서 대조한다 — 문구 자체는 여전히 원문 그대로여야 한다.
+ */
+const splitStyle = (key, pickLabel) => ({
+  ...proto.Q4_STYLE,
+  key,
+  options: proto.Q4_STYLE.options.map((option) => ({
+    id: option.id,
+    icon: option.icon,
+    label: pickLabel(option),
+  })),
+});
+
+const protoQuestions = [
+  proto.Q1,
+  proto.Q2_WHY,
+  proto.Q3_HOW,
+  splitStyle("styleFamily", (option) => option.subtitle),
+  splitStyle("style", (option) => option.label),
+];
 
 if (QUESTIONS.length !== protoQuestions.length) {
   fail(`질문 개수 ${QUESTIONS.length} ≠ 프로토타입 ${protoQuestions.length}`);
@@ -111,9 +133,11 @@ for (const [name, mine, original] of [
 }
 
 if (!failures.length)
-  ok("문구: 질문 4개 · 순서 · title · id · icon · label · subtitle · 결과 문구 상수가 프로토타입과 동일");
+  ok(
+    `문구: 질문 ${protoQuestions.length}개 · 순서 · title · id · icon · label · subtitle · 결과 문구 상수가 프로토타입과 동일`,
+  );
 
-/* ---------- 2. Q4(style) 지배력 전수 확인 ---------- */
+/* ---------- 2. Q5(style) 지배력 전수 확인 ---------- */
 
 const byKey = Object.fromEntries(QUESTIONS.map((q) => [q.key, q]));
 const styleQuestion = byKey.style;
@@ -176,8 +200,8 @@ if (!styleQuestion) {
 
   const total = combos.length * styleQuestion.options.length;
 
-  if (flips) fail(`Q4 뒤집힘 ${flips}/${total}건`);
-  else ok(`Q4 지배력: ${total}개 조합 전부 선택한 스타일의 맥주가 1위`);
+  if (flips) fail(`Q5 뒤집힘 ${flips}/${total}건`);
+  else ok(`Q5 지배력: ${total}개 조합 전부 선택한 스타일의 맥주가 1위`);
 
   // 여기부터는 실패가 아니라 참고용이다. 고른 스타일의 맥주가 1위인 것은
   // recommend() 의 STYLE_BONUS 가 보장하고, 아래 수치는 스타일당 맥주가

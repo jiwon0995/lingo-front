@@ -6,6 +6,8 @@ import { QUESTIONS } from "./questions";
  *
  * 질문 제목 · 선택지 라벨 · 이모지 · 서브타이틀은 프로토타입
  * (`docs/prototype.html`) 원문이자 확정된 피그마 디자인이라 **임의로 바뀌면 안 된다.**
+ * 스타일 질문만 원문 한 화면을 두 화면(`styleFamily` 종류 → `style` 맛)으로
+ * 쪼갠 것이라, 문구는 원문의 서브타이틀 · 라벨 그대로다.
  * 여기서 스냅샷으로 못박아 두면 누가 문구를 건드리는 순간 테스트가 깨진다.
  *
  * 의도적으로 문구를 바꿀 때는 스냅샷을 갱신하면 된다:
@@ -27,7 +29,8 @@ describe("질문 문구", () => {
         id: option.id,
         icon: option.icon,
         label: option.label,
-        // subtitle 이 없는 선택지는 없다는 사실까지 스냅샷에 남긴다
+        // 스타일 질문을 두 화면으로 쪼갠 뒤로는 서브타이틀을 쓰는 선택지가
+        // 없다 — 그 사실까지 스냅샷에 남긴다
         subtitle: option.subtitle ?? null,
       })),
     }));

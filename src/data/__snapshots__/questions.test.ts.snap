@@ -5,6 +5,7 @@ exports[`질문 문구 > 질문 개수와 선택지 개수가 그대로다 1`] =
   "company: 5개",
   "occasion: 4개",
   "source: 4개",
+  "styleFamily: 7개",
   "style: 7개",
 ]
 `;
@@ -108,49 +109,97 @@ exports[`질문 문구 > 질문 제목 · 선택지 라벨 · 이모지 · 서�
     "title": "저희 매장은 어떻게 알고 오셨나요?",
   },
   {
+    "key": "styleFamily",
+    "options": [
+      {
+        "icon": "🧊",
+        "id": "clean-lager",
+        "label": "라거 · 라들러 · 첫잔 추천",
+        "subtitle": null,
+      },
+      {
+        "icon": "🍊",
+        "id": "hop-forward",
+        "label": "페일에일 · IPA",
+        "subtitle": null,
+      },
+      {
+        "icon": "🍌",
+        "id": "wheat-yeast",
+        "label": "밀맥주 · 벨지안",
+        "subtitle": null,
+      },
+      {
+        "icon": "🍋",
+        "id": "sour-funky",
+        "label": "고제 · 람빅 · 사워",
+        "subtitle": null,
+      },
+      {
+        "icon": "☕",
+        "id": "dark-malty",
+        "label": "스타우트 · 포터",
+        "subtitle": null,
+      },
+      {
+        "icon": "🥃",
+        "id": "barrel-strong",
+        "label": "배럴에이지드 · 스트롱에일",
+        "subtitle": null,
+      },
+      {
+        "icon": "🍰",
+        "id": "dessert-specialty",
+        "label": "이색 부재료 맥주",
+        "subtitle": null,
+      },
+    ],
+    "title": "어떤 스타일의 맥주가 끌리시나요?",
+  },
+  {
     "key": "style",
     "options": [
       {
         "icon": "🧊",
         "id": "clean-lager",
         "label": "깔끔 · 청량",
-        "subtitle": "라거 · 라들러 · 첫잔 추천",
+        "subtitle": null,
       },
       {
         "icon": "🍊",
         "id": "hop-forward",
         "label": "쌉쌀 · 시트러스",
-        "subtitle": "페일에일 · IPA",
+        "subtitle": null,
       },
       {
         "icon": "🍌",
         "id": "wheat-yeast",
         "label": "향긋 · 부드러운",
-        "subtitle": "밀맥주 · 벨지안",
+        "subtitle": null,
       },
       {
         "icon": "🍋",
         "id": "sour-funky",
         "label": "새콤달콤 · 상큼",
-        "subtitle": "고제 · 람빅 · 사워",
+        "subtitle": null,
       },
       {
         "icon": "☕",
         "id": "dark-malty",
         "label": "고소 · 진한 흑맥주",
-        "subtitle": "스타우트 · 포터",
+        "subtitle": null,
       },
       {
         "icon": "🥃",
         "id": "barrel-strong",
         "label": "묵직한 한 잔",
-        "subtitle": "배럴에이지드 · 스트롱에일",
+        "subtitle": null,
       },
       {
         "icon": "🍰",
         "id": "dessert-specialty",
         "label": "디저트 · 스페셜티",
-        "subtitle": "이색 부재료 맥주",
+        "subtitle": null,
       },
     ],
     "title": "어떤 스타일의 맥주가 끌리시나요?",

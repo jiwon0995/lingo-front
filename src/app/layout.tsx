@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { APP_TITLE } from "@/config";
+import { QUESTIONS } from "@/data";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: APP_TITLE,
-  description: "간단한 질문 4개에 답하면 딱 맞는 맥주를 추천해드려요.",
+  // 랜딩 문구와 같은 문장 — 질문 개수는 데이터에서 온다
+  description: `간단한 질문 ${QUESTIONS.length}개에 답하면 딱 맞는 맥주를 추천해드려요.`,
 };
 
 /**

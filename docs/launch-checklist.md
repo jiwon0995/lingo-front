@@ -65,8 +65,9 @@
       (예: `id: "summer-lager"` / `styleId: "clean-lager"`). 구조는 이미
       배열이라 버티고, 같은 스타일 안에서는 Q1 · Q2 신호가 순위를 가른다.
       자세한 규칙은 [`docs/beer-schema.md`](./beer-schema.md).
-- [ ] 스타일 카테고리 자체가 매장 메뉴와 안 맞으면 Q4(`style`) 선택지부터
-      고친다. **선택지 `id` 와 `styleId` 는 같은 값이어야 한다.**
+- [ ] 스타일 카테고리 자체가 매장 메뉴와 안 맞으면 Q5(`style`) 선택지부터
+      고친다. **선택지 `id` 와 `styleId` 는 같은 값이어야 한다.** 같은 스타일을
+      종류 이름으로 묻는 Q4(`styleFamily`) 선택지도 같은 `id` 로 맞춰 고친다.
 - [ ] 맥주를 추가 · 삭제한 뒤 `npm run check:questions` 를 돌린다.
 
 ---
@@ -185,7 +186,7 @@ Handler의 `POST` · Server Action · 요청 기반 로직은 정적 export가 �
 - [ ] `npm run build` 성공
 - [ ] `npm test` · `npm run test:e2e` · `npm run lint` 통과
 - [ ] `npm run check:questions` 통과
-- [ ] 매장에서 실제로 쓸 기기 · 브라우저로 한 바퀴 돌려 본다 (질문 4개 → 결과 →
+- [ ] 매장에서 실제로 쓸 기기 · 브라우저로 한 바퀴 돌려 본다 (질문 5개 → 결과 →
       다른 추천 보기 → 별점). 태블릿 세로 화면에서 셸 너비가 어색하지 않은지.
 - [ ] **결과 화면 7종 전부 사진이 실제로 뜨는지 확인** ("아무거나 추천받기"를
       반복하거나 스타일을 하나씩 골라서).

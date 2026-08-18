@@ -6,14 +6,18 @@
 > - 데이터: [`src/data/questions.ts`](../src/data/questions.ts) · [`src/data/phrases.ts`](../src/data/phrases.ts)
 > - 가중치 표: [`docs/scoring-map.md`](./scoring-map.md)
 > - 원본: [`docs/prototype.html`](./prototype.html) 의 `Q1` · `Q2_WHY` · `Q3_HOW` · `Q4_STYLE`
+>   (`Q4_STYLE` 만 두 화면으로 쪼개져 있다 — 아래 [스타일 질문](#스타일-질문은-두-화면이다) 참고)
 
 ---
 
 ## 먼저: 지금 있는 문구는 건드리지 않는다
 
-질문 4개의 **제목 · 선택지 라벨 · 이모지 · 서브타이틀은 피그마 디자인(프레임 2~5)
-확정본**이고 프로토타입과 한 글자도 다르지 않다. 더 자연스러운 표현이 떠올라도
-고치지 않는다. 문구를 바꿔야 한다면 디자인부터 바꾸고 오는 게 순서다.
+질문 5개의 **제목 · 선택지 라벨 · 이모지는 피그마 디자인(프레임 2~5) 확정본**이고
+프로토타입과 한 글자도 다르지 않다. 더 자연스러운 표현이 떠올라도 고치지 않는다.
+문구를 바꿔야 한다면 디자인부터 바꾸고 오는 게 순서다.
+
+화면 개수만 원본과 다르다 — 스타일 질문이 두 화면이라 5개다. 문구 자체는
+원본의 라벨 · 서브타이틀을 그대로 나눠 쓴다.
 
 프로토타입에 없던 필드는 **화면에 보이지 않는 추천 전용 값**뿐이다.
 
@@ -36,7 +40,7 @@
 ```ts
 export const QUESTIONS: Question[] = [
   { key: "company", title: "오늘은 누구와 함께 하시나요?", options: [...] },
-  // 여기에 항목을 하나 넣으면 질문이 5개가 된다
+  // 여기에 항목을 하나 넣으면 질문이 6개가 된다
 ];
 ```
 
@@ -44,14 +48,15 @@ export const QUESTIONS: Question[] = [
 
 | 화면 요소 | 계산 근거 |
 |---|---|
-| 질문 순서 | 배열 순서 (`company` → `occasion` → `source` → `style`) |
+| 질문 순서 | 배열 순서 (`company` → `occasion` → `source` → `styleFamily` → `style`) |
 | 스텝퍼 점 개수 | `questions.length` — [`useQuizFlow`](../src/hooks/useQuizFlow.ts) 의 `totalSteps` |
-| "질문 2 / 4" 진행 표시 | `step` / `totalSteps` |
+| "질문 2 / 5" 진행 표시 | `step` / `totalSteps` |
 | 마지막 질문에서 결과로 넘어가는 시점 | `isLast` (`stepIndex === questions.length - 1`) |
 | 뒤로가기 활성화 | `isFirst` |
 
-랜딩 문구의 "간단한 질문 4개에 답하면…" · "질문 0 / 4" 도 **숫자를 쓰지 말고**
-`QUESTIONS.length` 로 만든다.
+랜딩 문구의 "간단한 질문 5개에 답하면…" · "질문 0 / 5" 도 **숫자를 쓰지 말고**
+`QUESTIONS.length` 로 만든다. [`layout.tsx`](../src/app/layout.tsx) 의 메타 설명도
+같은 값을 쓴다.
 
 ```tsx
 `간단한 질문 ${QUESTIONS.length}개에 답하면 딱 맞는 맥주를 추천해드려요.`
@@ -70,6 +75,26 @@ export const QUESTIONS: Question[] = [
 배열에서 지우면 끝이지만, 지운 질문의 `key` 를 참조하는 곳이 남아 있으면 안 된다.
 `company` · `occasion` 은 결과 문장([`phrases.ts`](../src/data/phrases.ts)),
 `style` 은 맥주의 `styleId` 와 이어져 있다.
+
+---
+
+## 스타일 질문은 두 화면이다
+
+프로토타입에서 한 화면이던 `Q4_STYLE` 을 앱에서는 둘로 쪼갰다. 선택지 문구만
+원본의 서브타이틀 · 라벨로 나눠 갖고, 제목 · 아이콘 · 선택지 id는 두 화면이 같다.
+
+| 화면 | key | 선택지 문구 | 추천 반영 |
+|---|---|---|---|
+| 질문 4 | `styleFamily` | 원본 **서브타이틀** — "라거 · 라들러 · 첫잔 추천" | ✗ (수집만) |
+| 질문 5 | `style` | 원본 **라벨** — "깔끔 · 청량" | ✓ (주 신호) |
+
+- **추천을 정하는 건 질문 5(`style`) 하나다.** 질문 4는
+  `affectsRecommendation: false` 라 `scoreEffect` 없이 답변만 쌓인다.
+- 두 화면의 선택지 id가 같아서(`clean-lager` …) `answers.styleFamily` 와
+  `answers.style` 을 그대로 맞대 보면 **종류로 고른 것과 맛으로 고른 것이
+  갈렸는지** 집계할 수 있다.
+- 제목이 연달아 같으므로 화면 전환을 제목으로 판별하면 안 된다 —
+  e2e는 `STEP n/5` 표시로 확인한다([`e2e/smoke.spec.ts`](../e2e/smoke.spec.ts)).
 
 ---
 
@@ -106,14 +131,14 @@ export const QUESTIONS: Question[] = [
 목표 = clamp(2.5 + Σ scoreEffect, 0, 5)   // 축: sweetness · bitterness · aroma · body · refreshing
 ```
 
-### 1. 주 신호(Q4 style)는 크게
+### 1. 주 신호(Q5 style)는 크게
 
 스타일 질문은 손님이 **직접 고른 맛 방향**이라 추천을 결정해야 한다.
 대상 맥주의 `profile` 을 보고 **중립값 2.5에서 그 값 쪽으로 확실히 넘어가도록**
-±2~3을 준다. 라벨 · 서브타이틀이 이미 맛 방향을 설명하니 그대로 옮기면 된다.
+±2~3을 준다. 두 화면의 라벨(맛 표현 · 종류)이 이미 맛 방향을 설명하니 그대로 옮기면 된다.
 
 ```ts
-// 🧊 깔끔 · 청량 — 라거 · 라들러 · 첫잔 추천
+// 🧊 깔끔 · 청량 (질문 5) — 라거 · 라들러 · 첫잔 추천 (질문 4)
 scoreEffect: { refreshing: 3, body: -2, bitterness: -1, sweetness: -2, aroma: -2 }
 ```
 
@@ -130,7 +155,7 @@ scoreEffect: { refreshing: 3, body: -2, bitterness: -1, sweetness: -2, aroma: -2
 
 ### 4. 넣고 나서 확인
 
-`npm run check:questions` 가 모든 답변 조합을 돌려 **보조 신호가 Q4의 결과를
+`npm run check:questions` 가 모든 답변 조합을 돌려 **보조 신호가 Q5의 결과를
 뒤집지 않는지** 검사한다. 자세한 값과 여유는 [`docs/scoring-map.md`](./scoring-map.md) 에 있다.
 
 고른 스타일이 1위인 것 자체는 `recommend()` 의 `STYLE_BONUS` 가 구조적으로 보장하므로
@@ -147,7 +172,8 @@ npm run check:questions
 ```
 
 - 질문 문구가 프로토타입 원문과 같은지 (개수 · 순서 · `title` · `id` · `icon` · `label` · `subtitle` · 결과 문구 상수)
-- 모든 답변 조합에서 Q4(style)에서 고른 스타일의 맥주가 1위인지
+  — 스타일 질문은 원본 한 화면을 `styleFamily` · `style` 두 화면으로 펼쳐서 대조한다
+- 모든 답변 조합에서 Q5(style)에서 고른 스타일의 맥주가 1위인지
 - (참고용) 스타일 가산점 없이 유사도만으로도 그 맥주가 1위인지
 
 ```bash

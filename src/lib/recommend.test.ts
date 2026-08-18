@@ -469,12 +469,14 @@ describe("질문 데이터 계약", () => {
     for (const id of STYLE_IDS) expect(styleIds.has(id)).toBe(true);
   });
 
-  it("source 질문만 추천에서 빠진다", () => {
+  it("source · styleFamily 질문이 추천에서 빠진다", () => {
     const excluded = QUESTIONS.filter(
       (q) => q.affectsRecommendation === false,
     ).map((q) => q.key);
 
-    expect(excluded).toEqual(["source"]);
+    // styleFamily 는 스타일을 종류로 한 번 더 묻는 화면이라 답변만 모은다 —
+    // 추천을 정하는 건 같은 id 를 쓰는 style 질문 하나다
+    expect(excluded).toEqual(["source", "styleFamily"]);
   });
 });
 
